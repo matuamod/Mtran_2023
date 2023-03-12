@@ -87,7 +87,8 @@ class LexicalAnalyzer(object):
     def parseString(self):
         result = str()
 
-        while self.current_char is not None and self.current_char.isalnum():
+        while self.current_char is not None and self.current_char.isalnum() \
+            or self.current_char is not None and self.current_char.isspace():
             result += self.current_char
             self.advance()
 
