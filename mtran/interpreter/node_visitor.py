@@ -2,8 +2,7 @@
 class NodeVisitor(object):
 
     def visit(self, node):
-        method_name = "visit" + type(node).__name__
-        # print(method_name)
+        method_name = "visit_" + type(node).__name__
         visitor = getattr(self, method_name, self.checkForVisit)
         return visitor(node)
 

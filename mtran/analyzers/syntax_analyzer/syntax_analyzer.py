@@ -1,5 +1,5 @@
 from .AST import *
-from ..lexical_analyzer import TOKEN_TYPES
+from ..lexical_analyzer import TOKEN_TYPES, ConfigureTables
 
 
 class SyntaxAnalyzer(object):
@@ -8,7 +8,11 @@ class SyntaxAnalyzer(object):
         # lexical_analyzer initialization
         self.lexical_analyzer = lexical_analyzer
         # Current token instance
-        self.current_token = self.lexical_analyzer.getNextToken()
+        self.current_token = self.lexical_analyzer.get_next_token()
+        # Configure tables instance init
+        self.conf = ConfigureTables()
+        # Add current token to table  
+        self.conf.fill_table(self.current_token)
 
 
     def error(self):
@@ -17,67 +21,79 @@ class SyntaxAnalyzer(object):
 
     def eat(self, token_type):
         if self.current_token.type == token_type:
-            self.current_token = self.lexical_analyzer.getNextToken()
+            self.current_token = self.lexical_analyzer.get_next_token()
+            self.conf.fill_table(self.current_token)
         else:
             self.error()
 
 
-    def paren(self):
+    def parse_paren(self):
         self.eat(TOKEN_TYPES.LPAREN.value)
-        node = self.expr()
+        node = self.parse_expr()
         self.eat(TOKEN_TYPES.RPAREN.value)
         return node
 
 
-    def factor(self):
+    def parse_factor(self):
         token = self.current_token
 
-        if token.type == TOKEN_TYPES.PLUS.value:
-            self.eat(TOKEN_TYPES.PLUS.value)
-            return UnaryOperation(
-                token=token,
-                expr=self.factor()
-            )
-        elif token.type == TOKEN_TYPES.MINUS.value:
-            self.eat(TOKEN_TYPES.MINUS.value)
-            return UnaryOperation(
-                token=token,
-                expr=self.factor()
-            )
-        elif token.type == TOKEN_TYPES.INTEGER.value:
-            self.eat(TOKEN_TYPES.INTEGER.value)
-            return Number(token)
-        elif token.type == TOKEN_TYPES.LPAREN.value:
-            return self.paren()
-        else:
-            return self.variable() 
+        match token.type:
+            case TOKEN_TYPES.PLUS.value:
+                self.eat(TOKEN_TYPES.PLUS.value)
+                return UnaryOperation(
+                    token=token,
+                    expr=self.parse_factor()
+                )
+
+            case TOKEN_TYPES.MINUS.value:
+                self.eat(TOKEN_TYPES.MINUS.value)
+                return UnaryOperation(
+                    token=token,
+                    expr=self.parse_factor()
+                )
+            
+            case TOKEN_TYPES.INTEGER_CONST.value:
+                self.eat(TOKEN_TYPES.INTEGER_CONST.value)
+                return Number(token)
+                
+            case TOKEN_TYPES.LPAREN.value:
+                return self.parse_paren()
+            
+            case _:
+                return self.parse_variable()
 
 
-    def temp(self):
-        node = self.factor()
+    def parse_term(self):
+        node = self.parse_factor()
 
         while self.current_token.type in (
                 TOKEN_TYPES.MUL.value,
-                TOKEN_TYPES.DIV.value):
+                TOKEN_TYPES.FLOAT_DIV.value,
+                TOKEN_TYPES.INTEGER_DIV.value):
 
             token = self.current_token
 
-            if self.current_token.type == TOKEN_TYPES.MUL.value:
-                self.eat(TOKEN_TYPES.MUL.value)
-            elif self.current_token.type == TOKEN_TYPES.DIV.value:
-                self.eat(TOKEN_TYPES.DIV.value)
+            match self.current_token.type:
+                case TOKEN_TYPES.MUL.value:
+                    self.eat(TOKEN_TYPES.MUL.value)
+
+                case TOKEN_TYPES.INTEGER_DIV.value:
+                    self.eat(TOKEN_TYPES.INTEGER_DIV.value)
+
+                case TOKEN_TYPES.FLOAT_DIV.value:
+                    self.eat(TOKEN_TYPES.FLOAT_DIV.value)
 
             node = BinaryOperation(
                 left_node=node,
                 token=token,
-                right_node=self.factor()
+                right_node=self.parse_factor()
             )
 
         return node
 
 
-    def expr(self):
-        node = self.temp()
+    def parse_expr(self):
+        node = self.parse_term()
 
         while self.current_token.type in (
                 TOKEN_TYPES.MINUS.value,
@@ -93,21 +109,21 @@ class SyntaxAnalyzer(object):
             node = BinaryOperation(
                 left_node=node,
                 token=token,
-                right_node=self.temp()
+                right_node=self.parse_term()
             )
 
         return node
 
 
-    def program(self):
-        node = self.compoundStatement()
+    def parse_program(self):
+        node = self.parse_compound_statement()
         self.eat(TOKEN_TYPES.DOT.value)
         return node
 
 
-    def compoundStatement(self):
+    def parse_compound_statement(self):
         self.eat(TOKEN_TYPES.BEGIN.value)
-        nodes_list = self.statementList()
+        nodes_list = self.parse_statement_list()
         self.eat(TOKEN_TYPES.END.value)
 
         compound_statement = CompoundStatement()
@@ -118,15 +134,14 @@ class SyntaxAnalyzer(object):
         return compound_statement 
 
 
-    def statementList(self):
+    def parse_statement_list(self):
         statement_list = list()
-        node = self.statement()
+        node = self.parse_statement()
         statement_list.append(node)
 
         while self.current_token.type == TOKEN_TYPES.SEMICOLON.value:
             self.eat(TOKEN_TYPES.SEMICOLON.value)
-            print(self.current_token.value)
-            statement_list.append(self.statement())
+            statement_list.append(self.parse_statement())
 
         if self.current_token.type == TOKEN_TYPES.ID.value:
             self.error()
@@ -134,39 +149,42 @@ class SyntaxAnalyzer(object):
         return statement_list
 
 
-    def statement(self):
-        if self.current_token.type == TOKEN_TYPES.BEGIN.value:
-            node = self.compoundStatement()
-        elif self.current_token.type == TOKEN_TYPES.ID.value:
-            node = self.assignmentStatement()
-        else:
-            node = self.empty()
+    def parse_statement(self):
+        match self.current_token.type:
+            case TOKEN_TYPES.BEGIN.value:
+                node = self.parse_compound_statement()
+
+            case TOKEN_TYPES.ID.value:
+                 node = self.parse_assignment_statement()
+                 
+            case _:
+                node = self.parse_empty()
 
         return node
 
 
-    def assignmentStatement(self):
-        left_node = self.variable()
+    def parse_assignment_statement(self):
+        left_node = self.parse_variable()
         token = self.current_token
         self.eat(TOKEN_TYPES.ASSINGMENT.value)
-        right_node = self.expr()
+        right_node = self.parse_expr()
 
         node = AssignmentStatement(left_node, token, right_node)
         return node
 
 
-    def variable(self):
+    def parse_variable(self):
         node = Variable(self.current_token)
         self.eat(TOKEN_TYPES.ID.value)
         return node
 
 
-    def empty(self):
+    def parse_empty(self):
         return EmptyOperation()
 
 
-    def makeParse(self):
-        node = self.program()
+    def make_parse(self):
+        node = self.parse_program()
 
         if self.current_token.type != TOKEN_TYPES.EOF.value:
             self.error()

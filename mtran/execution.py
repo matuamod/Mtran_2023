@@ -1,89 +1,37 @@
 import os
-from analyzers import LexicalAnalyzer, SyntaxAnalyzer, LexicalError, ErrorTypes, TOKEN_TYPES, RESERVED_TOKENS
+from analyzers import LexicalAnalyzer, SyntaxAnalyzer, LexicalError, AST_Printer
 from interpreter import Interpreter
-from prettytable import PrettyTable
-import re
-
 
 def main():
-    filepath = "tests/test2.pas"
-    code = get_code(filepath)
-    variables_table = PrettyTable(["Variable value", "Variable type"])
-    key_words_table = PrettyTable(["Key Word value", "Key Word type"])
-    constants_table = PrettyTable(["Constants value", "Constants type"])
-    operators_table = PrettyTable(["Operator value", "Operator type"])
-
-    lexical_analyzer = LexicalAnalyzer(code)
-
+    filepath = "tests/test1.pas"
+    
     with open(filepath, 'r') as f:
         code_lines = f.readlines()
         code = ''.join(code_lines)
 
-    while True:
+    try:
+        code = get_code(filepath)
+
         try:
-            token = lexical_analyzer.getNextToken()
+            lexical_analyzer = LexicalAnalyzer(code)
+            syntax_analyzer = SyntaxAnalyzer(lexical_analyzer)
+            ast_tree = syntax_analyzer.make_parse()
 
-            if token.type == TOKEN_TYPES.ID.value:
-                variable_type = f'variable of {token.type}, ' + \
-                    'type after syntax analyzer'
-                add_new_row(variables_table, "Variable value",
-                            token, variable_type)
-            elif token.type in RESERVED_TOKENS.keys():
-                key_word_type = f"key word of '{token.type}'"
-                add_new_row(key_words_table, "Key Word value",
-                            token, key_word_type)
-            elif str(token.type).endswith("_CONST"):
-                constant_type = f"'{token.type.rstrip('_CONST')}' constant"
-                add_new_row(constants_table, "Constants value",
-                            token, constant_type)
-            elif token.type not in RESERVED_TOKENS.keys() and \
-                    token.type != TOKEN_TYPES.EOF.value:
-                if re.match(r'(\d+)|[-+*/]', str(token.value)):
-                    arithmetic_type = "is arithmetic operator"
-                    add_new_row(operators_table, "Operator value",
-                                token, arithmetic_type)
-                elif re.match(r'(\d+)|[=<>]', str(token.value)):
-                    comparison_type = "is comparison operator/renational operator"
-                    add_new_row(operators_table, "Operator value",
-                                token, comparison_type)
-                else:
-                    default_type = f"is {token.type.lower()} operator"
-                    add_new_row(operators_table, "Operator value",
-                                token, default_type)
+            ast_printer = AST_Printer(ast_tree)
+            ast_printer.print_ast()
 
-            if token.value == None:
-                print(variables_table)
-                print(key_words_table)
-                print(constants_table)
-                print(operators_table)
-                break
+            # interpreter = Interpreter(syntax_analyzer)
+            # result = interpreter.evaluate()
+            # print(result)
+            # print(interpreter.GLOBAL_SCOPE)
         except LexicalError as e:
-            print()
             code_line = code_lines[e.line_num-1][:-1]
             print(code_line)
             print('~^~'.rjust(e.column_num+1))
             print(e)
-            break
-
-
-#     while True:
-#         try:
-#             # text = input("matuamod> ")
-#             text = """\
-#         except EOFError:
-#             break
-#         if not text:
-#             continue
-#         elif text == "exit":
-#             print("Successfully exit")
-#             return
-#         lexical_analyzer = LexicalAnalyzer(text)
-#         syntax_analyzer = SyntaxAnalyzer(lexical_analyzer)
-#         interpreter = Interpreter(syntax_analyzer)
-#         result = interpreter.evaluate()
-#         print(result)
-#         print(interpreter.GLOBAL_SCOPE)
-#         time.sleep(10)
+        
+    except EOFError:
+        exit()
 
 
 def get_code(filepath):
