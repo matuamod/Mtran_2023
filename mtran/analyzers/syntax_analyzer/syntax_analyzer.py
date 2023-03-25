@@ -223,6 +223,12 @@ class SyntaxAnalyzer(object):
                  node = self.parse_assignment_statement()
 
             # TODO : Add parse comparison and change statements
+
+            case TOKEN_TYPES.READLN.value:
+                node = self.parse_input_statement()
+
+            case TOKEN_TYPES.WRITELN.value:
+                node = self.parse_output_statement()
                  
             case _:
                 node = self.parse_empty()
@@ -233,7 +239,8 @@ class SyntaxAnalyzer(object):
     def parse_assignment_statement(self):
         left_node = self.parse_variable()
         token = self.current_token
-        self.eat(TOKEN_TYPES.ASSINGMENT.value)
+        """Eat all assignment sign"""
+        self.eat(token.type)
         right_node = self.parse_expr()
 
         node = AssignmentStatement(
@@ -248,7 +255,8 @@ class SyntaxAnalyzer(object):
     def parse_comparison_statement(self):
         left_node = self.parse_expr()
         token = self.current_token
-        self.eat(self.current_token.type)
+        """eat all comparison sign"""
+        self.eat(token.type)
         right_node = self.parse_expr()
 
         node = ComparisonStatement(
@@ -260,20 +268,37 @@ class SyntaxAnalyzer(object):
         return node
     
 
-    def parse_change_statement(self):
-        left_node = self.parse_expr()
-        token = self.current_token
-        self.eat(self.current_token)
-        right_node = self.parse_expr()
+    def parse_input_statement(self):
+        self.eat(TOKEN_TYPES.READLN.value)
+        self.eat(TOKEN_TYPES.LPAREN.value)
 
-        node = ChangeStatement(
-            left_node=left_node,
-            token=token,
-            right_node=right_node
-        )
+        input_statement = InputStatement()
+        input_statement.input_list.append(self.parse_expr())
 
-        return node
+        while self.current_token.type == TOKEN_TYPES.COMMA.value:
+            self.eat(TOKEN_TYPES.COMMA.value)
+            input_statement.input_list.append(self.parse_expr())
 
+        self.eat(TOKEN_TYPES.RPAREN.value)
+        return input_statement
+
+
+    def parse_output_statement(self):
+        print(self.current_token.value)
+        self.eat(TOKEN_TYPES.WRITELN.value)
+        print(self.current_token.value)
+        self.eat(TOKEN_TYPES.LPAREN.value)
+
+        output_statement = OutputStatement()
+        output_statement.output_list.append(self.parse_expr())
+
+        while self.current_token.type == TOKEN_TYPES.COMMA.value:
+            self.eat(TOKEN_TYPES.COMMA.value)
+            output_statement.output_list.append(self.parse_expr())
+
+        self.eat(TOKEN_TYPES.RPAREN.value)
+        return output_statement
+    
 
     def parse_variable(self):
         node = Variable(self.current_token)

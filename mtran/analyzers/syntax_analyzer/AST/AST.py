@@ -61,13 +61,16 @@ class ComparisonStatement(AST):
         self.right_node = right_node
 
 
-class ChangeStatement(AST):
+class InputStatement(AST):
+    
+    def __init__(self):
+        self.input_list = list()
 
-    def __init__(self, left_node, token, right_node):
-        self.left_node = left_node
-        self.token = token
-        self.operation = token
-        self.right_node = right_node
+
+class OutputStatement(AST):
+    
+    def __init__(self):
+        self.output_list = list()
 
 
 class Variable(AST):

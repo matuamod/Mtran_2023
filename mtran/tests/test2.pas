@@ -10,7 +10,10 @@ BEGIN {Part10}
       number := 2.1;
       a := number;
       b := 10 * a + 10.1 * number DIV 4;
-      c := a - - b
+      c := a - - b;
+      READLN(number);
+      WRITELN('hello matua');
+      WRITELN(number, a);
       { IF number >= b THEN }
          { WRITELN('hello matua'); }
    END;

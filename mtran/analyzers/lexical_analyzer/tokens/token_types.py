@@ -58,7 +58,6 @@ class TOKEN_TYPES(Enum):
     DOT = "DOT"
 
     WRITELN = "WRITELN" #
-    WRITE = "WRITE" #
     READLN = "READLN" #
 
     IF = "IF" #

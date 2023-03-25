@@ -53,8 +53,18 @@ class AST_Printer(AST_Visitor):
         pass
 
 
-    def visit_change_statement(self, node):
-        pass
+    def visit_input_statement(self, node):
+        self.print_message(f"Input:")
+
+        for input in node.input_list:
+            self.visit_node(input)
+
+
+    def visit_output_statement(self, node):
+        self.print_message(f"Output")
+
+        for output in node.output_list:
+            self.visit_node(output)
 
 
     def visit_variable(self, node):
