@@ -7,6 +7,34 @@ class AST_Printer(AST_Visitor):
         self.ignore = False 
 
 
+    def visit_program(self, node):
+        self.print_message(f"Program {node.name}")
+        self.visit_node(node.block)
+
+
+    def visit_block(self, node):
+        self.print_message(f"Block:")
+        self.visit_node(node.declaration)
+        self.visit_node(node.compound_statement)
+
+
+    def visit_declaration(self, node):
+        self.print_message(f"Declaration:")
+
+        for declaration in node.declaration_list:
+            self.visit_node(declaration)
+
+
+    def visit_variable_declaration(self, node):
+        self.print_message(f"Var declaration:")
+        self.visit_node(node.variable_node)
+        self.visit_node(node.type_node)
+
+
+    def visit_type_dec(self, node):
+        self.print_message(f"Type: {node.value}")
+
+
     def visit_compound_statement(self, node):
         self.print_message(f"Compound:")
         
@@ -21,8 +49,20 @@ class AST_Printer(AST_Visitor):
         self.visit_node(node.right_node)
 
 
+    def visit_comparison_statement(self, node):
+        pass
+
+
+    def visit_change_statement(self, node):
+        pass
+
+
     def visit_variable(self, node):
         self.print_message(f"Variable: '{node.value}'")
+
+
+    def visit_literal(self, node):
+        self.print_message(f"Literal: '{node.value}'")
 
 
     def visit_number(self, node):
@@ -30,7 +70,7 @@ class AST_Printer(AST_Visitor):
 
 
     def visit_empty_operation(self, node):
-        self.print_message(f"EmptyOp")
+        self.print_message(f"EmptyOperation")
 
 
     def visit_binary_operation(self, node):

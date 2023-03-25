@@ -6,9 +6,17 @@ class AST_Visitor(ABC):
     def __init__(self, ast_tree):
 
         self.nodes_handler = {
+            Program : self.visit_program,
+            Block : self.visit_block,
+            Declaration : self.visit_declaration,
+            VariableDeclaration : self.visit_variable_declaration,
+            Type : self.visit_type_dec,
             CompoundStatement : self.visit_compound_statement,
             AssignmentStatement : self.visit_assignment_statement,
+            ComparisonStatement : self.visit_comparison_statement,
+            ChangeStatement : self.visit_change_statement,
             Variable : self.visit_variable,
+            Literal : self.visit_literal,
             Number : self.visit_number,
             EmptyOperation : self.visit_empty_operation,
             BinaryOperation : self.visit_binary_operation,
@@ -17,6 +25,31 @@ class AST_Visitor(ABC):
         self.ast_tree = ast_tree
         self.path = list()
         self.depth = 0
+
+
+    @abstractmethod
+    def visit_program(self, node):
+        pass
+
+
+    @abstractmethod
+    def visit_block(self, node):
+        pass
+
+
+    @abstractmethod
+    def visit_declaration(self, node):
+        pass
+
+
+    @abstractmethod
+    def visit_variable_declaration(self, node):
+        pass
+
+
+    @abstractmethod
+    def visit_type_dec(self, node):
+        pass
 
 
     @abstractmethod
@@ -30,7 +63,22 @@ class AST_Visitor(ABC):
 
 
     @abstractmethod
+    def visit_comparison_statement(self, node):
+        pass
+
+
+    @abstractmethod
+    def visit_change_statement(self, node):
+        pass
+
+
+    @abstractmethod
     def visit_variable(self, node):
+        pass
+
+
+    @abstractmethod
+    def visit_literal(self, node):
         pass
 
 

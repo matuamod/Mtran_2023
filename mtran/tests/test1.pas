@@ -1,3 +1,4 @@
+PROGRAM Part10;
 BEGIN
     BEGIN
         number := 2;

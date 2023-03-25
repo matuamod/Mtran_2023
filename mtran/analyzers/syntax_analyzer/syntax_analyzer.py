@@ -1,3 +1,4 @@
+import re
 from .AST import *
 from ..lexical_analyzer import TOKEN_TYPES, ConfigureTables
 
@@ -36,31 +37,28 @@ class SyntaxAnalyzer(object):
 
     def parse_factor(self):
         token = self.current_token
-
-        match token.type:
-            case TOKEN_TYPES.PLUS.value:
-                self.eat(TOKEN_TYPES.PLUS.value)
-                return UnaryOperation(
-                    token=token,
-                    expr=self.parse_factor()
-                )
-
-            case TOKEN_TYPES.MINUS.value:
-                self.eat(TOKEN_TYPES.MINUS.value)
-                return UnaryOperation(
-                    token=token,
-                    expr=self.parse_factor()
-                )
             
-            case TOKEN_TYPES.INTEGER_CONST.value:
-                self.eat(TOKEN_TYPES.INTEGER_CONST.value)
-                return Number(token)
-                
-            case TOKEN_TYPES.LPAREN.value:
-                return self.parse_paren()
+        if re.match(r'\+|\-', str(token.value)):
+            self.eat(token.type)
+
+            return UnaryOperation(
+                token=token,
+                expr=self.parse_factor()
+            )
+        
+        elif str(token.type).endswith("_CONST"):
+            self.eat(token.type)
+
+            if re.match(r'(\d+(?:\.\d+)?)', str(token.value)):
+                return Number(token=token)
+            elif re.match(r'([A-Za-z\_\d+])+', str(token.value)):
+                return Literal(token=token)
             
-            case _:
-                return self.parse_variable()
+        elif token.type == TOKEN_TYPES.LPAREN.value:
+            return self.parse_paren()
+        
+        else:
+            return self.parse_variable()
 
 
     def parse_term(self):
@@ -116,9 +114,76 @@ class SyntaxAnalyzer(object):
 
 
     def parse_program(self):
-        node = self.parse_compound_statement()
+        self.eat(TOKEN_TYPES.PROGRAM.value)
+        variable_node = self.parse_variable()
+        name = variable_node.value
+        self.eat(TOKEN_TYPES.SEMICOLON.value)
+        block_node = self.parse_block()
         self.eat(TOKEN_TYPES.DOT.value)
-        return node
+
+        program = Program(
+            name=name, 
+            block=block_node
+            )
+         
+        return program
+    
+
+    def parse_block(self):
+        declaration_node = self.parse_declaration()
+        compound_statement_node = self.parse_compound_statement()
+
+        block = Block(
+            declaration=declaration_node, 
+            compound_statement=compound_statement_node
+            )
+        
+        return block
+
+
+    def parse_declaration(self):
+        if self.current_token.type == TOKEN_TYPES.VAR.value:
+            self.eat(TOKEN_TYPES.VAR.value)
+
+            declaration = Declaration()
+
+            # Iteration is actual for current line in VAR statement
+            while self.current_token.type == TOKEN_TYPES.ID.value:
+                var_declaration = self.parse_variable_declaration()
+                declaration.declaration_list.extend(var_declaration)
+                self.eat(TOKEN_TYPES.SEMICOLON.value)
+
+        return declaration
+
+
+    def parse_variable_declaration(self):
+        variable_list = list()
+        declaration_list = list()
+        variable_list.append(self.parse_variable())
+
+        while self.current_token.type == TOKEN_TYPES.COMMA.value:
+            self.eat(TOKEN_TYPES.COMMA.value)
+            variable_list.append(self.parse_variable())
+
+        self.eat(TOKEN_TYPES.COLON.value)
+
+        type_node = self.parse_type_spec()
+
+        for variable_node in variable_list:
+            declaration_list.append(VariableDeclaration(
+                variable_node=variable_node, 
+                type_node=type_node
+            ))
+
+        return declaration_list
+
+
+    def parse_type_spec(self):
+        token = self.current_token
+        self.eat(token.type)
+
+        type_node = Type(token=token)
+        return type_node
 
 
     def parse_compound_statement(self):
@@ -156,6 +221,8 @@ class SyntaxAnalyzer(object):
 
             case TOKEN_TYPES.ID.value:
                  node = self.parse_assignment_statement()
+
+            # TODO : Add parse comparison and change statements
                  
             case _:
                 node = self.parse_empty()
@@ -169,7 +236,42 @@ class SyntaxAnalyzer(object):
         self.eat(TOKEN_TYPES.ASSINGMENT.value)
         right_node = self.parse_expr()
 
-        node = AssignmentStatement(left_node, token, right_node)
+        node = AssignmentStatement(
+            left_node=left_node, 
+            token=token, 
+            right_node=right_node
+            )
+        
+        return node
+    
+
+    def parse_comparison_statement(self):
+        left_node = self.parse_expr()
+        token = self.current_token
+        self.eat(self.current_token.type)
+        right_node = self.parse_expr()
+
+        node = ComparisonStatement(
+            left_node=left_node, 
+            token=token, 
+            right_node=right_node
+        )
+
+        return node
+    
+
+    def parse_change_statement(self):
+        left_node = self.parse_expr()
+        token = self.current_token
+        self.eat(self.current_token)
+        right_node = self.parse_expr()
+
+        node = ChangeStatement(
+            left_node=left_node,
+            token=token,
+            right_node=right_node
+        )
+
         return node
 
 

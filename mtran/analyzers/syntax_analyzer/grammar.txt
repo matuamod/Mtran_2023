@@ -1,27 +1,59 @@
 Grammar rules for syntax analyzer
 
-program : compound_statement DOT
+program : PROGRAM variable SEMICOLON block DOT
+
+block : declaration compound_statement
+
+declaration : VAR (variable_declaration SEMICOLON)+
+            | empty
+
+variable_declaration : variable (COMMA variable)* COLON variable_type
+
+type_spec : INTEGER
+                | REAL
+                | CHAR
+                | STRING
+                | BOOLEAN
+                | ARRAY
 
 compound_statement : BEGIN statement_list END
 
 statement_list : statement
-                    | statement SEMICOLON statement_list
+                | statement SEMICOLON statement_list
 
 statement : compound_statement
-                | assignment_statement
-                | empty
+            | assignment_statement
+            | comparison_statement
+            | change_statement
+            | empty
 
 assignment_statement : variable ASSINGMENT expr
 
+comparison_statement : expr (EQUAL 
+                                | NONEQUAL
+                                | GREATER
+                                | LESS
+                                | GREATER_OR_EQUAL
+                                | LESS_OR_EQUAL) expr
+
+change_statement : expr (PLUS_EQUAL
+                        | MINUS_EQUAL
+                        | MUL_EQUAL
+                        | DIV_EQUAL) expr
+
 expr : term ((PLUS | MINUS) term)*
 
-term : factor((MUL | DIV) factor)*
+term : factor((MUL | INTEGER_DIV | FLOAT_DIV) factor)*
 
 factor : PLUS factor
-            | MINUS factor
-            | INTEGER
-            | paren
-            | variable
+        | MINUS factor
+        | INTEGER_CONST
+        | REAL_CONST
+        | CHAR_CONST
+        | STRING_CONST
+        | BOOLEAN_CONST
+        | paren
+        | variable
 
 paren : LPAREN expr RPAREN
 
