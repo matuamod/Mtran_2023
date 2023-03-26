@@ -28,94 +28,6 @@ class SyntaxAnalyzer(object):
             self.error()
 
 
-    def parse_paren(self):
-        self.eat(TOKEN_TYPES.LPAREN.value)
-        node = self.parse_expr()
-        self.eat(TOKEN_TYPES.RPAREN.value)
-        return node
-
-
-    def parse_factor(self):
-        token = self.current_token
-            
-        if re.match(r'\+|\-', str(token.value)):
-            self.eat(token.type)
-
-            return UnaryOperation(
-                token=token,
-                expr=self.parse_factor()
-            )
-        
-        elif str(token.type).endswith("_CONST"):
-            self.eat(token.type)
-
-            if re.match(r'(\d+(?:\.\d+)?)', str(token.value)):
-                return Number(token=token)
-            elif re.match(r'([A-Za-z\_\d+])+', str(token.value)):
-                return Literal(token=token)
-            
-        elif token.type == TOKEN_TYPES.LPAREN.value:
-            return self.parse_paren()
-        
-        else:
-            return self.parse_variable()
-
-
-    def parse_term(self):
-        node = self.parse_factor()
-
-        while self.current_token.type in (
-                TOKEN_TYPES.MUL.value,
-                TOKEN_TYPES.FLOAT_DIV.value,
-                TOKEN_TYPES.INTEGER_DIV.value):
-
-            token = self.current_token
-
-            match self.current_token.type:
-                case TOKEN_TYPES.MUL.value:
-                    self.eat(TOKEN_TYPES.MUL.value)
-
-                case TOKEN_TYPES.INTEGER_DIV.value:
-                    self.eat(TOKEN_TYPES.INTEGER_DIV.value)
-
-                case TOKEN_TYPES.FLOAT_DIV.value:
-                    self.eat(TOKEN_TYPES.FLOAT_DIV.value)
-
-                case TOKEN_TYPES.XOR.value:
-                    self.eat(TOKEN_TYPES.XOR.value)
-
-            node = BinaryOperation(
-                left_node=node,
-                token=token,
-                right_node=self.parse_factor()
-            )
-
-        return node
-
-
-    def parse_expr(self):
-        node = self.parse_term()
-
-        while self.current_token.type in (
-                TOKEN_TYPES.MINUS.value,
-                TOKEN_TYPES.PLUS.value):
-
-            token = self.current_token
-
-            if self.current_token.type == TOKEN_TYPES.PLUS.value:
-                self.eat(TOKEN_TYPES.PLUS.value)
-            elif self.current_token.type == TOKEN_TYPES.MINUS.value:
-                self.eat(TOKEN_TYPES.MINUS.value)
-
-            node = BinaryOperation(
-                left_node=node,
-                token=token,
-                right_node=self.parse_term()
-            )
-
-        return node
-
-
     def parse_program(self):
         self.eat(TOKEN_TYPES.PROGRAM.value)
         variable_node = self.parse_variable()
@@ -209,8 +121,6 @@ class SyntaxAnalyzer(object):
             )
 
             declaration_list.append(proc_declaration)
-            print("proc_declaration")
-            print(self.current_token.value)
             self.eat(TOKEN_TYPES.SEMICOLON.value)
             
         return declaration_list
@@ -227,6 +137,7 @@ class SyntaxAnalyzer(object):
     def parse_compound_statement(self):
         self.eat(TOKEN_TYPES.BEGIN.value)
         nodes_list = self.parse_statement_list()
+        print(self.current_token.value)
         self.eat(TOKEN_TYPES.END.value)
 
         compound_statement = CompoundStatement()
@@ -267,6 +178,9 @@ class SyntaxAnalyzer(object):
 
             case TOKEN_TYPES.WRITELN.value:
                 node = self.parse_output_statement()
+
+            case TOKEN_TYPES.IF.value:
+                node = self.parse_if_statement()
                  
             case _:
                 node = self.parse_empty()
@@ -288,23 +202,7 @@ class SyntaxAnalyzer(object):
             )
         
         return node
-    
-
-    def parse_comparison_statement(self):
-        left_node = self.parse_expr()
-        token = self.current_token
-        """eat all comparison sign"""
-        self.eat(token.type)
-        right_node = self.parse_expr()
-
-        node = ComparisonStatement(
-            left_node=left_node, 
-            token=token, 
-            right_node=right_node
-        )
-
-        return node
-    
+        
 
     def parse_input_statement(self):
         self.eat(TOKEN_TYPES.READLN.value)
@@ -335,6 +233,139 @@ class SyntaxAnalyzer(object):
         self.eat(TOKEN_TYPES.RPAREN.value)
         return output_statement
     
+
+    def parse_if_statement(self):
+        self.eat(TOKEN_TYPES.IF.value)
+        condition = self.parse_comparison()
+        self.eat(TOKEN_TYPES.THEN.value)
+        statement = self.parse_statement()
+
+        if self.current_token.type == TOKEN_TYPES.ELSE.value:
+            self.eat(TOKEN_TYPES.ELSE.value)
+            next_statement = self.parse_statement()
+
+            if_statement = IfStatement(
+                comparison=condition,
+                statement=statement,
+                next_statement=next_statement
+            )
+        else:
+            if_statement = IfStatement(
+                comparison=condition,
+                statement=statement
+            )
+
+        return if_statement
+    
+
+    def parse_comparison(self):
+        node = self.parse_expr()
+
+        while self.current_token.type.endswith("EQUAL") or \
+            self.current_token.type in (
+                TOKEN_TYPES.GREATER.value,
+                TOKEN_TYPES.LESS.value
+            ):
+            token = self.current_token
+            """eat all comparison sign"""
+            self.eat(token.type)
+
+            node = ComparisonStatement(
+                left_node=node, 
+                token=token, 
+                right_node=self.parse_expr()
+            )
+
+        return node
+    
+
+    def parse_expr(self):
+        node = self.parse_term()
+
+        while self.current_token.type in (
+                TOKEN_TYPES.MINUS.value,
+                TOKEN_TYPES.PLUS.value):
+
+            token = self.current_token
+
+            if self.current_token.type == TOKEN_TYPES.PLUS.value:
+                self.eat(TOKEN_TYPES.PLUS.value)
+            elif self.current_token.type == TOKEN_TYPES.MINUS.value:
+                self.eat(TOKEN_TYPES.MINUS.value)
+
+            node = BinaryOperation(
+                left_node=node,
+                token=token,
+                right_node=self.parse_term()
+            )
+
+        return node
+    
+
+    def parse_term(self):
+        node = self.parse_factor()
+
+        while self.current_token.type in (
+                TOKEN_TYPES.MUL.value,
+                TOKEN_TYPES.FLOAT_DIV.value,
+                TOKEN_TYPES.INTEGER_DIV.value):
+
+            token = self.current_token
+
+            match self.current_token.type:
+                case TOKEN_TYPES.MUL.value:
+                    self.eat(TOKEN_TYPES.MUL.value)
+
+                case TOKEN_TYPES.INTEGER_DIV.value:
+                    self.eat(TOKEN_TYPES.INTEGER_DIV.value)
+
+                case TOKEN_TYPES.FLOAT_DIV.value:
+                    self.eat(TOKEN_TYPES.FLOAT_DIV.value)
+
+                case TOKEN_TYPES.XOR.value:
+                    self.eat(TOKEN_TYPES.XOR.value)
+
+            node = BinaryOperation(
+                left_node=node,
+                token=token,
+                right_node=self.parse_factor()
+            )
+
+        return node
+    
+
+    def parse_factor(self):
+        token = self.current_token
+            
+        if re.match(r'\+|\-', str(token.value)):
+            self.eat(token.type)
+
+            return UnaryOperation(
+                token=token,
+                expr=self.parse_factor()
+            )
+        
+        elif str(token.type).endswith("_CONST"):
+            self.eat(token.type)
+
+            if re.match(r'(\d+(?:\.\d+)?)', str(token.value)):
+                return Number(token=token)
+            elif re.match(r'([A-Za-z\_\d+])+', str(token.value)):
+                return Literal(token=token)
+                 
+        elif token.type == TOKEN_TYPES.LPAREN.value:
+            return self.parse_paren()
+        
+        else:
+            return self.parse_variable()
+
+    
+    def parse_paren(self):
+        self.eat(TOKEN_TYPES.LPAREN.value)
+        node = self.parse_expr()
+        self.eat(TOKEN_TYPES.RPAREN.value)
+        return node
+
 
     def parse_variable(self):
         node = Variable(self.current_token)

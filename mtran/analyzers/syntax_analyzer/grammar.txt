@@ -24,14 +24,13 @@ statement_list : statement
 
 statement : compound_statement
             | assignment_statement
-            | comparison_statement
             | input_statement
             | output_statement
+            | if_statement
+            | loop_statement
+            | jump_statement
+            | switch_statement
             | empty
-
-input_statement : READLN RCURLY_BRACE (expr COMMA)* LCURLY_BRACE
-
-output_statement : WRITELN RCURLY_BRACE (expr COMMA)* LCURLY_BRACE
 
 assignment_statement : variable (ASSINGMENT
                                 | PLUS_EQUAL
@@ -39,12 +38,24 @@ assignment_statement : variable (ASSINGMENT
                                 | MUL_EQUAL
                                 | DIV_EQUAL) expr
 
-comparison_statement : expr (EQUAL 
-                                | NONEQUAL
-                                | GREATER
-                                | LESS
-                                | GREATER_OR_EQUAL
-                                | LESS_OR_EQUAL) expr
+input_statement : READLN RCURLY_BRACE (expr COMMA)* LCURLY_BRACE
+
+output_statement : WRITELN RCURLY_BRACE (expr COMMA)* LCURLY_BRACE
+
+if_statement : IF comparison THEN statement (ELSE statement)?
+
+loop_statement : pass
+
+jump_statement : pass
+
+switch_statement : pass
+
+comparison : expr ((EQUAL 
+                        | NONEQUAL
+                        | GREATER
+                        | LESS
+                        | GREATER_OR_EQUAL
+                        | LESS_OR_EQUAL) expr)*
 
 expr : term ((PLUS | MINUS) term)*
 
@@ -60,6 +71,7 @@ factor : PLUS factor
         | CHAR_CONST
         | STRING_CONST
         | BOOLEAN_CONST
+        | comparison_statement
         | paren
         | variable
 

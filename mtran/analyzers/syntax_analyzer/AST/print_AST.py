@@ -54,22 +54,35 @@ class AST_Printer(AST_Visitor):
         self.visit_node(node.right_node)
 
 
-    def visit_comparison_statement(self, node):
-        pass
+    def visit_comparison(self, node):
+        self.print_message(f"Comparison:")
+        self.visit_node(node.left_node)
+        self.print_message(f"'{node.operation.value}'")
+        self.visit_node(node.right_node)
 
 
     def visit_input_statement(self, node):
-        self.print_message(f"Input:")
+        self.print_message(f"Readln:")
 
         for input in node.input_list:
             self.visit_node(input)
 
 
     def visit_output_statement(self, node):
-        self.print_message(f"Output")
+        self.print_message(f"Writeln:")
 
         for output in node.output_list:
             self.visit_node(output)
+
+
+    def visit_if_statement(self, node):
+        self.print_message(f"If:")
+        self.visit_node(node.comparison)
+        self.visit_node(node.statement)
+
+        if node.next_statement != None:
+            self.print_message(f"Else:")
+            self.visit_node(node.next_statement)
 
 
     def visit_variable(self, node):

@@ -14,9 +14,10 @@ class AST_Visitor(ABC):
             Type : self.visit_type_dec,
             CompoundStatement : self.visit_compound_statement,
             AssignmentStatement : self.visit_assignment_statement,
-            ComparisonStatement : self.visit_comparison_statement,
+            ComparisonStatement : self.visit_comparison,
             InputStatement : self.visit_input_statement,
             OutputStatement : self.visit_output_statement,
+            IfStatement :self.visit_if_statement,
             Variable : self.visit_variable,
             Literal : self.visit_literal,
             Number : self.visit_number,
@@ -70,7 +71,7 @@ class AST_Visitor(ABC):
 
 
     @abstractmethod
-    def visit_comparison_statement(self, node):
+    def visit_comparison(self, node):
         pass
 
 
@@ -81,6 +82,11 @@ class AST_Visitor(ABC):
 
     @abstractmethod
     def visit_output_statement(self, node):
+        pass
+
+
+    @abstractmethod
+    def visit_if_statement(self, node):
         pass
 
 

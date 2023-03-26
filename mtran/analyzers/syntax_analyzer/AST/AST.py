@@ -79,6 +79,14 @@ class OutputStatement(AST):
         self.output_list = list()
 
 
+class IfStatement(AST):
+
+    def __init__(self, comparison, statement, next_statement=None):
+        self.comparison = comparison
+        self.statement = statement
+        self.next_statement = next_statement
+
+
 class Variable(AST):
     
     def __init__(self, token):

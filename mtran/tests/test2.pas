@@ -27,6 +27,19 @@ BEGIN {Part10}
       a := number;
       b := 10 * a + 10.1 * number DIV 4;
       c := a - - b;
+
+      IF number <= b THEN
+      BEGIN
+         WRITELN('if statement here');
+
+         IF TRUE THEN
+         BEGIN
+            buff := b - number * 10 / 2;
+         END;
+      END
+      ELSE
+         WRITELN('else statement here');
+      
       READLN(number);
       WRITELN('hello matua');
       WRITELN(number, a);
