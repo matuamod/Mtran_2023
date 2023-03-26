@@ -81,6 +81,9 @@ class SyntaxAnalyzer(object):
                 case TOKEN_TYPES.FLOAT_DIV.value:
                     self.eat(TOKEN_TYPES.FLOAT_DIV.value)
 
+                case TOKEN_TYPES.XOR.value:
+                    self.eat(TOKEN_TYPES.XOR.value)
+
             node = BinaryOperation(
                 left_node=node,
                 token=token,
@@ -148,10 +151,16 @@ class SyntaxAnalyzer(object):
             declaration = Declaration()
 
             # Iteration is actual for current line in VAR statement
-            while self.current_token.type == TOKEN_TYPES.ID.value:
-                var_declaration = self.parse_variable_declaration()
-                declaration.declaration_list.extend(var_declaration)
-                self.eat(TOKEN_TYPES.SEMICOLON.value)
+            while self.current_token.type == TOKEN_TYPES.ID.value or \
+                self.current_token.type == TOKEN_TYPES.PROCEDURE.value:
+
+                if self.current_token.type == TOKEN_TYPES.ID.value:
+                    var_declaration = self.parse_variable_declaration()
+                    declaration.declaration_list.extend(var_declaration)
+                    self.eat(TOKEN_TYPES.SEMICOLON.value)
+                elif self.current_token.type == TOKEN_TYPES.PROCEDURE.value:
+                    proc_declaration = self.parse_procedure_declaration()
+                    declaration.declaration_list.extend(proc_declaration)
 
         return declaration
 
@@ -175,6 +184,35 @@ class SyntaxAnalyzer(object):
                 type_node=type_node
             ))
 
+        return declaration_list
+
+
+    def parse_procedure_declaration(self):
+        declaration_list = list()
+
+        if self.current_token.type == TOKEN_TYPES.VAR.value:
+            self.eat(TOKEN_TYPES.VAR.value)
+
+            while self.current_token.type == TOKEN_TYPES.ID.value:
+                var_declaration = self.parse_variable_declaration()
+                declaration_list.extend(var_declaration)
+
+        while self.current_token.type == TOKEN_TYPES.PROCEDURE.value:
+            self.eat(TOKEN_TYPES.PROCEDURE.value)
+            name = self.parse_variable()
+            self.eat(TOKEN_TYPES.SEMICOLON.value)
+            block_node = self.parse_block()
+
+            proc_declaration =  ProcedureDeclaration(
+                name=name,
+                block=block_node
+            )
+
+            declaration_list.append(proc_declaration)
+            print("proc_declaration")
+            print(self.current_token.value)
+            self.eat(TOKEN_TYPES.SEMICOLON.value)
+            
         return declaration_list
 
 
@@ -284,9 +322,7 @@ class SyntaxAnalyzer(object):
 
 
     def parse_output_statement(self):
-        print(self.current_token.value)
         self.eat(TOKEN_TYPES.WRITELN.value)
-        print(self.current_token.value)
         self.eat(TOKEN_TYPES.LPAREN.value)
 
         output_statement = OutputStatement()

@@ -30,6 +30,12 @@ class VariableDeclaration(AST):
         self.type_node = type_node
 
 
+class ProcedureDeclaration(AST):
+
+    def __init__(self, name, block):
+        self.name = name
+        self.block_node = block
+
 class Type(AST):
 
     def __init__(self, token):

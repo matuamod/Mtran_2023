@@ -10,6 +10,7 @@ class AST_Visitor(ABC):
             Block : self.visit_block,
             Declaration : self.visit_declaration,
             VariableDeclaration : self.visit_variable_declaration,
+            ProcedureDeclaration : self.visit_procedure_declaration,
             Type : self.visit_type_dec,
             CompoundStatement : self.visit_compound_statement,
             AssignmentStatement : self.visit_assignment_statement,
@@ -45,6 +46,11 @@ class AST_Visitor(ABC):
 
     @abstractmethod
     def visit_variable_declaration(self, node):
+        pass
+
+
+    @abstractmethod
+    def visit_procedure_declaration(self, node):
         pass
 
 

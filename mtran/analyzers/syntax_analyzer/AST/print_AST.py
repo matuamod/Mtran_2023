@@ -31,6 +31,11 @@ class AST_Printer(AST_Visitor):
         self.visit_node(node.type_node)
 
 
+    def visit_procedure_declaration(self, node):
+        self.print_message(f"Procedure {node.name.value}")
+        self.visit_node(node.block_node)
+
+
     def visit_type_dec(self, node):
         self.print_message(f"Type: {node.value}")
 

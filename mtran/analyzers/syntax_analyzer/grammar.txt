@@ -5,7 +5,8 @@ program : PROGRAM variable SEMICOLON block DOT
 block : declaration compound_statement
 
 declaration : VAR (variable_declaration SEMICOLON)+
-            | empty
+                | (PROCEDURE variable SEMICOLON block SEMICOLON)*    
+                | empty
 
 variable_declaration : variable (COMMA variable)* COLON variable_type
 
@@ -47,7 +48,10 @@ comparison_statement : expr (EQUAL
 
 expr : term ((PLUS | MINUS) term)*
 
-term : factor((MUL | INTEGER_DIV | FLOAT_DIV) factor)*
+term : factor((MUL 
+                | INTEGER_DIV 
+                | FLOAT_DIV
+                | XOR) factor)*
 
 factor : PLUS factor
         | MINUS factor
