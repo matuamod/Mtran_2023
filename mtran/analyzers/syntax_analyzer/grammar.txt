@@ -36,32 +36,34 @@ assignment_statement : variable (ASSINGMENT
                                 | PLUS_EQUAL
                                 | MINUS_EQUAL
                                 | MUL_EQUAL
-                                | DIV_EQUAL) expr
+                                | DIV_EQUAL) logic
 
-input_statement : READLN LPAREN (expr COMMA)* RPAREN
+input_statement : READLN LPAREN (logic COMMA)* RPAREN
 
-output_statement : WRITELN LPAREN (expr COMMA)* RPAREN
+output_statement : WRITELN LPAREN (logic COMMA)* RPAREN
 
 if_statement : IF comparison THEN statement (ELSE statement)?
 
 loop_statement : pass
 
-jump_statement : EXIT LPAREN (expr)? RPAREN
+jump_statement : EXIT LPAREN (logic)? RPAREN
                 | CONTINUE
                 | BREAK
 
-case_statement : CASE expr OF (case_compound SEMICOLON)* default_compound? END
+case_statement : CASE logic OF (case_compound SEMICOLON)* default_compound? END
 
-case_compound : expr COLON statement
+case_compound : logic COLON statement
 
 default_compound :  ELSE statement
 
-comparison : expr ((EQUAL 
+comparison : logic ((EQUAL 
                         | NONEQUAL
                         | GREATER
                         | LESS
                         | GREATER_OR_EQUAL
-                        | LESS_OR_EQUAL) expr)*
+                        | LESS_OR_EQUAL) logic)*
+
+logic : expr ((OR | AND | XOR) expr)*
 
 expr : term ((PLUS | MINUS) term)*
 
@@ -81,7 +83,7 @@ factor : PLUS factor
         | paren
         | variable
 
-paren : LPAREN expr RPAREN
+paren : LPAREN logic RPAREN
 
 variable : ID
 

@@ -140,6 +140,15 @@ class EmptyOperation(AST):
     pass
 
 
+class LogicalOperation(AST):
+    
+    def __init__(self, left_node, token, right_node):
+        self.left_node = left_node
+        self.token = token
+        self.operation = token
+        self.right_node = right_node
+
+
 class BinaryOperation(AST):
     
     def __init__(self, left_node, token, right_node):

@@ -127,6 +127,13 @@ class AST_Printer(AST_Visitor):
         self.print_message(f"EmptyOperation")
 
 
+    def visit_logical_operation(self, node):
+        self.print_message(f"LogicalOperation:")
+        self.visit_node(node.left_node)
+        self.print_message(f"'{node.operation.value}'")
+        self.visit_node(node.right_node)
+    
+    
     def visit_binary_operation(self, node):
         self.print_message(f"BinaryOperation:")
         self.visit_node(node.left_node)

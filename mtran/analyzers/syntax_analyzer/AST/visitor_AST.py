@@ -26,6 +26,7 @@ class AST_Visitor(ABC):
             Literal : self.visit_literal,
             Number : self.visit_number,
             EmptyOperation : self.visit_empty_operation,
+            LogicalOperation : self.visit_logical_operation,
             BinaryOperation : self.visit_binary_operation,
             UnaryOperation : self.visit_unary_operation
         }
@@ -131,6 +132,11 @@ class AST_Visitor(ABC):
 
     @abstractmethod
     def visit_empty_operation(self, node):
+        pass
+
+
+    @abstractmethod
+    def visit_logical_operation(self, node):
         pass
 
 

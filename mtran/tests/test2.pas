@@ -29,7 +29,7 @@ BEGIN {Part10}
       b := 10 * a + 10.1 * number DIV 4;
       c := a - - b;
 
-      IF number <= b THEN
+      IF number AND c <= b THEN
       BEGIN
          WRITELN('if statement here');
 

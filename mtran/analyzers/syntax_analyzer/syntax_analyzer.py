@@ -201,7 +201,7 @@ class SyntaxAnalyzer(object):
         token = self.current_token
         """Eat all assignment sign"""
         self.eat(token.type)
-        right_node = self.parse_expr()
+        right_node = self.parse_logic()
 
         node = AssignmentStatement(
             left_node=left_node, 
@@ -217,11 +217,11 @@ class SyntaxAnalyzer(object):
         self.eat(TOKEN_TYPES.LPAREN.value)
 
         input_statement = InputStatement()
-        input_statement.input_list.append(self.parse_expr())
+        input_statement.input_list.append(self.parse_logic())
 
         while self.current_token.type == TOKEN_TYPES.COMMA.value:
             self.eat(TOKEN_TYPES.COMMA.value)
-            input_statement.input_list.append(self.parse_expr())
+            input_statement.input_list.append(self.parse_logic())
 
         self.eat(TOKEN_TYPES.RPAREN.value)
         return input_statement
@@ -232,11 +232,11 @@ class SyntaxAnalyzer(object):
         self.eat(TOKEN_TYPES.LPAREN.value)
 
         output_statement = OutputStatement()
-        output_statement.output_list.append(self.parse_expr())
+        output_statement.output_list.append(self.parse_logic())
 
         while self.current_token.type == TOKEN_TYPES.COMMA.value:
             self.eat(TOKEN_TYPES.COMMA.value)
-            output_statement.output_list.append(self.parse_expr())
+            output_statement.output_list.append(self.parse_logic())
 
         self.eat(TOKEN_TYPES.RPAREN.value)
         return output_statement
@@ -278,7 +278,7 @@ class SyntaxAnalyzer(object):
                 if self.current_token.type == TOKEN_TYPES.RPAREN.value:
                     self.eat(TOKEN_TYPES.RPAREN.value)
                 else:
-                    expr = self.parse_expr()
+                    expr = self.parse_logic()
                     self.eat(TOKEN_TYPES.RPAREN.value)
                     
             case TOKEN_TYPES.CONTINUE.value:
@@ -299,7 +299,7 @@ class SyntaxAnalyzer(object):
     
     def parse_case_statement(self):
         self.eat(TOKEN_TYPES.CASE.value)
-        condition = self.parse_expr()
+        condition = self.parse_logic()
         self.eat(TOKEN_TYPES.OF.value)
         
         case_list = list()
@@ -336,7 +336,7 @@ class SyntaxAnalyzer(object):
     
     def parse_case_compound(self):
         print(self.current_token.value)
-        case = self.parse_expr()
+        case = self.parse_logic()
         print(self.current_token.value)
         self.eat(TOKEN_TYPES.COLON.value)
         print(self.current_token.value)
@@ -363,7 +363,7 @@ class SyntaxAnalyzer(object):
     
 
     def parse_comparison(self):
-        node = self.parse_expr()
+        node = self.parse_logic()
 
         while self.current_token.type.endswith("EQUAL") or \
             self.current_token.type in (
@@ -377,9 +377,29 @@ class SyntaxAnalyzer(object):
             node = ComparisonStatement(
                 left_node=node, 
                 token=token, 
-                right_node=self.parse_expr()
+                right_node=self.parse_logic()
             )
 
+        return node
+    
+    
+    def parse_logic(self):
+        node = self.parse_expr()
+        
+        while self.current_token.type in (
+                TOKEN_TYPES.OR.value,
+                TOKEN_TYPES.AND.value,
+                TOKEN_TYPES.XOR.value):
+            
+            token = self.current_token
+            self.eat(token.type)
+                    
+            node = LogicalOperation(
+                left_node=node,
+                token=token,
+                right_node=self.parse_expr()
+            )
+            
         return node
     
 
@@ -391,11 +411,7 @@ class SyntaxAnalyzer(object):
                 TOKEN_TYPES.PLUS.value):
 
             token = self.current_token
-
-            if self.current_token.type == TOKEN_TYPES.PLUS.value:
-                self.eat(TOKEN_TYPES.PLUS.value)
-            elif self.current_token.type == TOKEN_TYPES.MINUS.value:
-                self.eat(TOKEN_TYPES.MINUS.value)
+            self.eat(token.type)
 
             node = BinaryOperation(
                 left_node=node,
@@ -415,20 +431,8 @@ class SyntaxAnalyzer(object):
                 TOKEN_TYPES.INTEGER_DIV.value):
 
             token = self.current_token
-
-            match self.current_token.type:
-                case TOKEN_TYPES.MUL.value:
-                    self.eat(TOKEN_TYPES.MUL.value)
-
-                case TOKEN_TYPES.INTEGER_DIV.value:
-                    self.eat(TOKEN_TYPES.INTEGER_DIV.value)
-
-                case TOKEN_TYPES.FLOAT_DIV.value:
-                    self.eat(TOKEN_TYPES.FLOAT_DIV.value)
-
-                case TOKEN_TYPES.XOR.value:
-                    self.eat(TOKEN_TYPES.XOR.value)
-
+            self.eat(token.type)
+            
             node = BinaryOperation(
                 left_node=node,
                 token=token,
