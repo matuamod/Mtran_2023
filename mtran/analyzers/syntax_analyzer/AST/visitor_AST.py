@@ -21,7 +21,10 @@ class AST_Visitor(ABC):
             ComparisonStatement : self.visit_comparison,
             InputStatement : self.visit_input_statement,
             OutputStatement : self.visit_output_statement,
-            IfStatement :self.visit_if_statement,
+            IfStatement : self.visit_if_statement,
+            ForLoop : self.visit_for_statement,
+            WhileLoop : self.visit_while_statement,
+            RepeatLoop : self.visit_repeat_statement,
             Variable : self.visit_variable,
             Literal : self.visit_literal,
             Number : self.visit_number,
@@ -112,6 +115,21 @@ class AST_Visitor(ABC):
 
     @abstractmethod
     def visit_if_statement(self, node):
+        pass
+    
+    
+    @abstractmethod
+    def visit_for_statement(self, node):
+        pass
+    
+    
+    @abstractmethod
+    def visit_while_statement(self, node):
+        pass
+    
+    
+    @abstractmethod
+    def visit_repeat_statement(self, node):
         pass
 
 

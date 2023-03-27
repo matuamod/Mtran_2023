@@ -10,7 +10,6 @@ class TOKEN_TYPES(Enum):
 
     ID = "ID"
     VAR = "VAR" #
-    TYPE = "TYPE" #
     CONST = "CONST" #
 
     INTEGER = "INTEGER" #

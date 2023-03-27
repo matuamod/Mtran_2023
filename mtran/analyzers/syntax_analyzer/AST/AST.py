@@ -65,6 +65,28 @@ class JumpStatement(AST):
         self.expr = expr
 
 
+class ForLoop(AST):
+    
+    def __init__(self, assignment, border, statement):
+        self.assignment = assignment,
+        self.border = border,
+        self.statement = statement
+        
+        
+class WhileLoop(AST):
+    
+    def __init__(self, border, statement):
+        self.border = border
+        self.statement = statement
+        
+        
+class RepeatLoop(AST):
+    
+    def __init__(self, statement, border):
+        self.statement = statement,
+        self.border = border
+
+
 class CaseStatement(AST):
 
     def __init__(self, condition, case_list):

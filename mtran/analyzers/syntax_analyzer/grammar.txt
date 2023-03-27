@@ -44,7 +44,9 @@ output_statement : WRITELN LPAREN (logic COMMA)* RPAREN
 
 if_statement : IF comparison THEN statement (ELSE statement)?
 
-loop_statement : pass
+loop_statement : FOR statement TO logic DO statement 
+                | WHILE comparison DO statement
+                | REPEAT statement UNTIL comparison
 
 jump_statement : EXIT LPAREN (logic)? RPAREN
                 | CONTINUE

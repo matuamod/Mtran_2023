@@ -109,6 +109,29 @@ class AST_Printer(AST_Visitor):
         if node.next_statement != None:
             self.print_message(f"Else:")
             self.visit_node(node.next_statement)
+            
+            
+    def visit_for_statement(self, node):
+        self.print_message(f"Loop For:")
+        self.visit_node(node.assignment[0])
+        self.print_message(f"To:")
+        self.visit_node(node.border[0])
+        self.print_message(f"Do:")
+        self.visit_node(node.statement)
+    
+    
+    def visit_while_statement(self, node):
+        self.print_message(f"Loop While:")
+        self.visit_node(node.border)
+        self.print_message("Do")
+        self.visit_node(node.statement)
+    
+    
+    def visit_repeat_statement(self, node):
+        self.print_message(f"Loop Repeat:")
+        self.visit_node(node.statement[0])
+        self.print_message("Until")
+        self.visit_node(node.border)
 
 
     def visit_variable(self, node):

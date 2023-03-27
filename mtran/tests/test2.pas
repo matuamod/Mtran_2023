@@ -29,6 +29,11 @@ BEGIN {Part10}
       b := 10 * a + 10.1 * number DIV 4;
       c := a - - b;
 
+      FOR i := 0 TO 3 DO 
+      BEGIN
+         WRITELN('For loop'); 
+      END;
+
       IF number AND c <= b THEN
       BEGIN
          WRITELN('if statement here');
@@ -36,6 +41,11 @@ BEGIN {Part10}
          IF TRUE THEN
          BEGIN
             buff := b - number * 10 / 2;
+            WHILE i < 3 DO
+            BEGIN
+               WRITELN('While loop');
+               i := i + 1;
+            END;
          END;
       END
       ELSE
@@ -51,8 +61,15 @@ BEGIN {Part10}
       READLN(number);
       WRITELN('hello matua');
       WRITELN(number, a);
-      { IF number >= b THEN }
-         { WRITELN('hello matua'); }
+      IF number >= b THEN 
+         WRITELN('hello matua'); 
+         i := 0;
+         REPEAT
+         BEGIN
+            WRITELN('Repeat loop');
+            i := i + 1;
+         END
+         UNTIL i>3;
    END;
    x := 11;
    y := 20 / 7 + 3.14;

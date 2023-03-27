@@ -190,6 +190,12 @@ class SyntaxAnalyzer(object):
                     TOKEN_TYPES.BREAK.value
                 ):
                     node = self.parse_jump_statement()
+                elif self.current_token.type in (
+                    TOKEN_TYPES.FOR.value,
+                    TOKEN_TYPES.WHILE.value,
+                    TOKEN_TYPES.REPEAT.value
+                ):
+                    node = self.parse_loop_statement()
                 else:
                     node = self.parse_empty()
 
@@ -266,6 +272,47 @@ class SyntaxAnalyzer(object):
         return if_statement
     
     
+    def parse_loop_statement(self):
+        match(self.current_token.type):
+            case TOKEN_TYPES.FOR.value:
+                self.eat(TOKEN_TYPES.FOR.value)
+                assignment = self.parse_statement()
+                self.eat(TOKEN_TYPES.TO.value)
+                border = self.parse_logic()
+                self.eat(TOKEN_TYPES.DO.value)
+                statement = self.parse_statement()
+                
+                return ForLoop(
+                    assignment=assignment,
+                    border=border,
+                    statement=statement
+                )
+                
+            case TOKEN_TYPES.WHILE.value:
+                self.eat(TOKEN_TYPES.WHILE.value)
+                border = self.parse_comparison()
+                print(self.current_token.type)
+                self.eat(TOKEN_TYPES.DO.value)
+                print(self.current_token.type)
+                statement = self.parse_statement()
+                
+                return WhileLoop(
+                    border=border,
+                    statement=statement
+                )
+                
+            case TOKEN_TYPES.REPEAT.value:
+                self.eat(TOKEN_TYPES.REPEAT.value)
+                statement = self.parse_statement()
+                self.eat(TOKEN_TYPES.UNTIL.value)
+                border = self.parse_comparison()
+                
+                return RepeatLoop(
+                    statement=statement,
+                    border=border
+                )
+                    
+    
     def parse_jump_statement(self):
         expr = None
         
@@ -335,18 +382,15 @@ class SyntaxAnalyzer(object):
     
     
     def parse_case_compound(self):
-        print(self.current_token.value)
         case = self.parse_logic()
-        print(self.current_token.value)
         self.eat(TOKEN_TYPES.COLON.value)
-        print(self.current_token.value)
         result = self.parse_statement()
-        print(self.current_token.value)
         
         case_compound = CaseCompound(
             case=case,
             result=result
         )
+        
         return case_compound
     
     
@@ -359,6 +403,7 @@ class SyntaxAnalyzer(object):
             default=default,
             result=result
         )
+        
         return default_compound
     
 

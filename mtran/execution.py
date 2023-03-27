@@ -17,6 +17,7 @@ def main():
             syntax_analyzer = SyntaxAnalyzer(lexical_analyzer)
             ast_tree = syntax_analyzer.make_parse()
 
+            print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
             ast_printer = AST_Printer(ast_tree)
             ast_printer.print_ast()
 
