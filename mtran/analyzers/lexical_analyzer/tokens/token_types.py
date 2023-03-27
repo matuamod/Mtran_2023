@@ -59,6 +59,10 @@ class TOKEN_TYPES(Enum):
 
     WRITELN = "WRITELN" #
     READLN = "READLN" #
+    
+    EXIT = "EXIT"
+    CONTINUE = "CONTINUE"
+    BREAK = "BREAK"
 
     IF = "IF" #
     ELSE = "ELSE" #

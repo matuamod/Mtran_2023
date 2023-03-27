@@ -56,6 +56,34 @@ class AssignmentStatement(AST):
         self.token = token
         self.operation = token
         self.right_node = right_node
+        
+        
+class JumpStatement(AST):
+    
+    def __init__(self, jump, expr=None):
+        self.jump = jump
+        self.expr = expr
+
+
+class CaseStatement(AST):
+
+    def __init__(self, condition, case_list):
+        self.condition = condition
+        self.case_list = case_list
+        
+        
+class CaseCompound(AST):
+    
+    def __init__(self, case, result):
+        self.case = case
+        self.result = result
+        
+        
+class DefaultCompound(AST):
+    
+    def __init__(self, default, result):
+        self.default = default
+        self.result = result
 
 
 class ComparisonStatement(AST):

@@ -14,6 +14,7 @@ VAR
       a, z : INTEGER;
    BEGIN {P2}
       z := 777;
+      EXIT(5);
    END;  {P2}
 
 BEGIN {P1}
@@ -39,6 +40,13 @@ BEGIN {Part10}
       END
       ELSE
          WRITELN('else statement here');
+
+      CASE a OF
+         1 : Capital := 'Moscow';
+         2 : Capital := 'Paris';
+         3 : Capital := 'Rim';
+         ELSE Capital := 'No any country variant'; 
+      END;
       
       READLN(number);
       WRITELN('hello matua');

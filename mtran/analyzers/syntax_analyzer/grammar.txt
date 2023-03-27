@@ -29,7 +29,7 @@ statement : compound_statement
             | if_statement
             | loop_statement
             | jump_statement
-            | switch_statement
+            | case_statement
             | empty
 
 assignment_statement : variable (ASSINGMENT
@@ -38,17 +38,23 @@ assignment_statement : variable (ASSINGMENT
                                 | MUL_EQUAL
                                 | DIV_EQUAL) expr
 
-input_statement : READLN RCURLY_BRACE (expr COMMA)* LCURLY_BRACE
+input_statement : READLN LPAREN (expr COMMA)* RPAREN
 
-output_statement : WRITELN RCURLY_BRACE (expr COMMA)* LCURLY_BRACE
+output_statement : WRITELN LPAREN (expr COMMA)* RPAREN
 
 if_statement : IF comparison THEN statement (ELSE statement)?
 
 loop_statement : pass
 
-jump_statement : pass
+jump_statement : EXIT LPAREN (expr)? RPAREN
+                | CONTINUE
+                | BREAK
 
-switch_statement : pass
+case_statement : CASE expr OF (case_compound SEMICOLON)* default_compound? END
+
+case_compound : expr COLON statement
+
+default_compound :  ELSE statement
 
 comparison : expr ((EQUAL 
                         | NONEQUAL

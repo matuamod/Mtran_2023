@@ -137,7 +137,6 @@ class SyntaxAnalyzer(object):
     def parse_compound_statement(self):
         self.eat(TOKEN_TYPES.BEGIN.value)
         nodes_list = self.parse_statement_list()
-        print(self.current_token.value)
         self.eat(TOKEN_TYPES.END.value)
 
         compound_statement = CompoundStatement()
@@ -171,8 +170,6 @@ class SyntaxAnalyzer(object):
             case TOKEN_TYPES.ID.value:
                  node = self.parse_assignment_statement()
 
-            # TODO : Add parse comparison and change statements
-
             case TOKEN_TYPES.READLN.value:
                 node = self.parse_input_statement()
 
@@ -181,9 +178,20 @@ class SyntaxAnalyzer(object):
 
             case TOKEN_TYPES.IF.value:
                 node = self.parse_if_statement()
+                
+            case TOKEN_TYPES.CASE.value:
+                node = self.parse_case_statement()
                  
             case _:
-                node = self.parse_empty()
+                
+                if self.current_token.type in (
+                    TOKEN_TYPES.EXIT.value,
+                    TOKEN_TYPES.CONTINUE.value,
+                    TOKEN_TYPES.BREAK.value
+                ):
+                    node = self.parse_jump_statement()
+                else:
+                    node = self.parse_empty()
 
         return node
 
@@ -256,6 +264,102 @@ class SyntaxAnalyzer(object):
             )
 
         return if_statement
+    
+    
+    def parse_jump_statement(self):
+        expr = None
+        
+        match self.current_token.type:
+            case TOKEN_TYPES.EXIT.value:
+                jump = "Exit"
+                self.eat(TOKEN_TYPES.EXIT.value)
+                self.eat(TOKEN_TYPES.LPAREN.value)
+                
+                if self.current_token.type == TOKEN_TYPES.RPAREN.value:
+                    self.eat(TOKEN_TYPES.RPAREN.value)
+                else:
+                    expr = self.parse_expr()
+                    self.eat(TOKEN_TYPES.RPAREN.value)
+                    
+            case TOKEN_TYPES.CONTINUE.value:
+                jump = "Continue"
+                self.eat(TOKEN_TYPES.CONTINUE.value)
+                
+            case TOKEN_TYPES.BREAK.value:
+                jump = "Break"
+                self.eat(TOKEN_TYPES.BREAK.value)
+                
+        jump_statement = JumpStatement(
+            jump=jump,
+            expr=expr
+        )
+        
+        return jump_statement
+    
+    
+    def parse_case_statement(self):
+        self.eat(TOKEN_TYPES.CASE.value)
+        condition = self.parse_expr()
+        self.eat(TOKEN_TYPES.OF.value)
+        
+        case_list = list()
+        case_list.append(self.parse_case_compound())
+        
+        while self.current_token.type == TOKEN_TYPES.SEMICOLON.value:
+            self.eat(TOKEN_TYPES.SEMICOLON.value)
+            
+            if self.current_token.type == TOKEN_TYPES.END.value:
+                break
+            
+            if self.current_token.type == TOKEN_TYPES.ELSE.value:
+                case_list.append(self.parse_default_compound())
+                
+                case_statement = CaseStatement(
+                    condition=condition,
+                    case_list=case_list
+                )
+                
+                self.eat(TOKEN_TYPES.SEMICOLON.value)
+                self.eat(TOKEN_TYPES.END.value)
+                return case_statement
+            
+            case_list.append(self.parse_case_compound())
+        
+        case_statement = CaseStatement(
+            condition=condition,
+            case_list=case_list
+        )    
+        
+        self.eat(TOKEN_TYPES.END.value)         
+        return case_statement
+    
+    
+    def parse_case_compound(self):
+        print(self.current_token.value)
+        case = self.parse_expr()
+        print(self.current_token.value)
+        self.eat(TOKEN_TYPES.COLON.value)
+        print(self.current_token.value)
+        result = self.parse_statement()
+        print(self.current_token.value)
+        
+        case_compound = CaseCompound(
+            case=case,
+            result=result
+        )
+        return case_compound
+    
+    
+    def parse_default_compound(self):
+        default = "Else"
+        self.eat(TOKEN_TYPES.ELSE.value)
+        result = self.parse_statement()
+        
+        default_compound = DefaultCompound(
+            default=default,
+            result=result
+        )
+        return default_compound
     
 
     def parse_comparison(self):

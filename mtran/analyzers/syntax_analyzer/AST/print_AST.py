@@ -52,6 +52,32 @@ class AST_Printer(AST_Visitor):
         self.visit_node(node.left_node)
         self.print_message(f"'{node.operation.value}'")
         self.visit_node(node.right_node)
+        
+        
+    def visit_jump_statement(self, node):
+        self.print_message(f"'{node.jump}'")
+        
+        if node.expr != None:
+            self.visit_node(node.expr)
+        
+        
+    def visit_case_statement(self, node):
+        self.print_message(f"Case:")
+        self.visit_node(node.condition)
+        
+        for case in node.case_list:
+            self.visit_node(case)
+        
+        
+    def visit_case_compound(self, node):
+        self.visit_node(node.case)
+        self.print_message(f"':'")
+        self.visit_node(node.result)
+    
+    
+    def visit_default_compound(self, node):
+        self.print_message(f"{node.default}")
+        self.visit_node(node.result)
 
 
     def visit_comparison(self, node):

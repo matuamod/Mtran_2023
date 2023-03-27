@@ -14,6 +14,10 @@ class AST_Visitor(ABC):
             Type : self.visit_type_dec,
             CompoundStatement : self.visit_compound_statement,
             AssignmentStatement : self.visit_assignment_statement,
+            JumpStatement : self.visit_jump_statement,
+            CaseStatement : self.visit_case_statement,
+            CaseCompound : self.visit_case_compound,
+            DefaultCompound : self.visit_default_compound,
             ComparisonStatement : self.visit_comparison,
             InputStatement : self.visit_input_statement,
             OutputStatement : self.visit_output_statement,
@@ -66,7 +70,27 @@ class AST_Visitor(ABC):
 
 
     @abstractmethod
+    def visit_case_compound(self, node):
+        pass
+    
+    
+    @abstractmethod
+    def visit_default_compound(self, node):
+        pass
+
+
+    @abstractmethod
     def visit_assignment_statement(self, node):
+        pass
+
+
+    @abstractmethod
+    def visit_jump_statement(self, node):
+        pass
+
+
+    @abstractmethod
+    def visit_case_statement(self, node):
         pass
 
 
