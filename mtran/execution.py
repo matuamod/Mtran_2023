@@ -1,5 +1,5 @@
 import os
-from analyzers import LexicalAnalyzer, SyntaxAnalyzer, LexicalError, AST_Printer
+from analyzers import LexicalAnalyzer, SyntaxAnalyzer, LexicalError, SyntaxError, AST_Printer
 from interpreter import Interpreter
 
 def main():
@@ -25,11 +25,18 @@ def main():
             # result = interpreter.evaluate()
             # print(result)
             # print(interpreter.GLOBAL_SCOPE)
-        except LexicalError as e:
-            code_line = code_lines[e.line_num-1][:-1]
+        except LexicalError as le:
+            code_line = code_lines[le.line_num-1][:-1]
             print(code_line)
-            print('~^~'.rjust(e.column_num+1))
-            print(e)
+            print('~^~'.rjust(le.column_num+1))
+            print(le)
+        except SyntaxError as se:
+            code_line = code_lines[se.line_num[0]-1][:-1]
+            print(code_line)
+            # code_line = code_lines[se.line_num-1][:-1]
+            # print(code_line)
+            print('~^~'.rjust(se.column_num[0]+1))
+            print(se)
         
     except EOFError:
         exit()

@@ -18,7 +18,7 @@ VAR
    END;  {P2}
 
 BEGIN {P1}
-   name = 'MTRAN';
+   name := 'MTRAN';
 END; {P1}
 
 BEGIN {Part10}

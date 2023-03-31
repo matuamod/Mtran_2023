@@ -11,8 +11,8 @@ class ErrorTypes(Enum):
 
 class LexicalError(Exception):
 
-    def __init__(self, line_num: int, column_num: int,
-                 message: str = ErrorTypes.STANDARD_ERROR.value):
+    def __init__(self, line_num, column_num,
+                 message=ErrorTypes.STANDARD_ERROR.value):
         self.line_num = line_num
         self.column_num = column_num
         self.message = ErrorTypes.ERROR_CLASSIFICATION.value + \

@@ -1,6 +1,7 @@
 import re
 from .AST import *
 from ..lexical_analyzer import TOKEN_TYPES, ConfigureTables
+from .syntax_error import SyntaxError, ErrorTypes
 
 
 class SyntaxAnalyzer(object):
@@ -15,9 +16,9 @@ class SyntaxAnalyzer(object):
         # Add current token to table  
         self.conf.fill_table(self.current_token)
 
-
-    def error(self):
-        raise Exception("Error. Invalid syntax")
+    
+    def error(self, message):
+        raise SyntaxError(self.lexical_analyzer.line_num, self.lexical_analyzer.column_num, message)
 
 
     def eat(self, token_type):
@@ -25,13 +26,17 @@ class SyntaxAnalyzer(object):
             self.current_token = self.lexical_analyzer.get_next_token()
             self.conf.fill_table(self.current_token)
         else:
-            self.error()
+            self.error(ErrorTypes.STANDART_ERROR.value)
 
 
     def parse_program(self):
         self.eat(TOKEN_TYPES.PROGRAM.value)
         variable_node = self.parse_variable()
         name = variable_node.value
+        
+        if self.current_token.type != TOKEN_TYPES.SEMICOLON.value:
+            self.error(ErrorTypes.SEMICOLON_ERROR.value)
+            
         self.eat(TOKEN_TYPES.SEMICOLON.value)
         block_node = self.parse_block()
         self.eat(TOKEN_TYPES.DOT.value)
@@ -57,10 +62,10 @@ class SyntaxAnalyzer(object):
 
 
     def parse_declaration(self):
+        declaration = Declaration()
+        
         if self.current_token.type == TOKEN_TYPES.VAR.value:
             self.eat(TOKEN_TYPES.VAR.value)
-
-            declaration = Declaration()
 
             # Iteration is actual for current line in VAR statement
             while self.current_token.type == TOKEN_TYPES.ID.value or \
@@ -69,6 +74,10 @@ class SyntaxAnalyzer(object):
                 if self.current_token.type == TOKEN_TYPES.ID.value:
                     var_declaration = self.parse_variable_declaration()
                     declaration.declaration_list.extend(var_declaration)
+                    
+                    if self.current_token.type != TOKEN_TYPES.SEMICOLON.value:
+                        self.error(ErrorTypes.SEMICOLON_ERROR.value)
+                    
                     self.eat(TOKEN_TYPES.SEMICOLON.value)
                 elif self.current_token.type == TOKEN_TYPES.PROCEDURE.value:
                     proc_declaration = self.parse_procedure_declaration()
@@ -112,6 +121,10 @@ class SyntaxAnalyzer(object):
         while self.current_token.type == TOKEN_TYPES.PROCEDURE.value:
             self.eat(TOKEN_TYPES.PROCEDURE.value)
             name = self.parse_variable()
+            
+            if self.current_token.type != TOKEN_TYPES.SEMICOLON.value:
+                self.error(ErrorTypes.SEMICOLON_ERROR.value)
+
             self.eat(TOKEN_TYPES.SEMICOLON.value)
             block_node = self.parse_block()
 
@@ -121,6 +134,10 @@ class SyntaxAnalyzer(object):
             )
 
             declaration_list.append(proc_declaration)
+            
+            if self.current_token.type != TOKEN_TYPES.SEMICOLON.value:
+                self.error(ErrorTypes.SEMICOLON_ERROR.value)
+            
             self.eat(TOKEN_TYPES.SEMICOLON.value)
             
         return declaration_list
@@ -128,7 +145,15 @@ class SyntaxAnalyzer(object):
 
     def parse_type_spec(self):
         token = self.current_token
-        self.eat(token.type)
+        
+        if token.type not in (
+            TOKEN_TYPES.INTEGER.value, TOKEN_TYPES.REAL.value,
+            TOKEN_TYPES.CHAR.value, TOKEN_TYPES.STRING.value,
+            TOKEN_TYPES.BOOLEAN.value
+        ):
+            self.error(ErrorTypes.TYPE_ERROR.value)
+        else: 
+            self.eat(token.type)
 
         type_node = Type(token=token)
         return type_node
@@ -155,9 +180,9 @@ class SyntaxAnalyzer(object):
         while self.current_token.type == TOKEN_TYPES.SEMICOLON.value:
             self.eat(TOKEN_TYPES.SEMICOLON.value)
             statement_list.append(self.parse_statement())
-
+            
         if self.current_token.type == TOKEN_TYPES.ID.value:
-            self.error()
+            self.error(ErrorTypes.IDENTIFIER_ERROR.value)
 
         return statement_list
 
@@ -206,14 +231,18 @@ class SyntaxAnalyzer(object):
         left_node = self.parse_variable()
         token = self.current_token
         """Eat all assignment sign"""
-        self.eat(token.type)
-        right_node = self.parse_logic()
+        
+        if token.type != TOKEN_TYPES.ASSINGMENT.value:
+            self.error(ErrorTypes.ASSIGNMENT_ERRROR.value)
+        else:
+            self.eat(token.type)
+            right_node = self.parse_logic()
 
-        node = AssignmentStatement(
-            left_node=left_node, 
-            token=token, 
-            right_node=right_node
-            )
+            node = AssignmentStatement(
+                left_node=left_node, 
+                token=token, 
+                right_node=right_node
+                )
         
         return node
         
@@ -366,12 +395,15 @@ class SyntaxAnalyzer(object):
                     case_list=case_list
                 )
                 
+                if self.current_token.type != TOKEN_TYPES.SEMICOLON.value:
+                    self.error(ErrorTypes.SEMICOLON_ERROR.value)
+                
                 self.eat(TOKEN_TYPES.SEMICOLON.value)
                 self.eat(TOKEN_TYPES.END.value)
                 return case_statement
             
             case_list.append(self.parse_case_compound())
-        
+            
         case_statement = CaseStatement(
             condition=condition,
             case_list=case_list
@@ -505,6 +537,8 @@ class SyntaxAnalyzer(object):
                 return Number(token=token)
             elif re.match(r'([A-Za-z\_\d+])+', str(token.value)):
                 return Literal(token=token)
+            else:
+                self.error(ErrorTypes.CONSTANT_ERROR.value)
                  
         elif token.type == TOKEN_TYPES.LPAREN.value:
             return self.parse_paren()
@@ -534,6 +568,6 @@ class SyntaxAnalyzer(object):
         node = self.parse_program()
 
         if self.current_token.type != TOKEN_TYPES.EOF.value:
-            self.error()
+            self.error(ErrorTypes.STANDART_ERROR.value)
 
         return node

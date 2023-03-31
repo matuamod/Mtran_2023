@@ -8,7 +8,7 @@ declaration : VAR (variable_declaration SEMICOLON)+
                 | (PROCEDURE variable SEMICOLON block SEMICOLON)*    
                 | empty
 
-variable_declaration : variable (COMMA variable)* COLON variable_type
+variable_declaration : variable (COMMA variable)* COLON type_spec
 
 type_spec : INTEGER
                 | REAL
@@ -90,3 +90,5 @@ paren : LPAREN logic RPAREN
 variable : ID
 
 empty : 
+
+
