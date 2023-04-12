@@ -15,7 +15,6 @@ type_spec : INTEGER
                 | CHAR
                 | STRING
                 | BOOLEAN
-                | ARRAY
 
 compound_statement : BEGIN statement_list END
 
@@ -71,8 +70,7 @@ expr : term ((PLUS | MINUS) term)*
 
 term : factor((MUL 
                 | INTEGER_DIV 
-                | FLOAT_DIV
-                | XOR) factor)*
+                | FLOAT_DIV) factor)*
 
 factor : PLUS factor
         | MINUS factor

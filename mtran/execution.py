@@ -1,5 +1,5 @@
 import os
-from analyzers import LexicalAnalyzer, SyntaxAnalyzer, LexicalError, SyntaxError, AST_Printer
+from analyzers import LexicalAnalyzer, SyntaxAnalyzer, SemanticAnalyzer, LexicalError, SyntaxError, SemanticError, AST_Printer
 from interpreter import Interpreter
 
 def main():
@@ -20,6 +20,9 @@ def main():
             print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
             ast_printer = AST_Printer(ast_tree)
             ast_printer.print_ast()
+            
+            semantic_analyzer = SemanticAnalyzer(ast_tree)
+            semantic_analyzer.check_ast()
 
             # interpreter = Interpreter(syntax_analyzer)
             # result = interpreter.evaluate()
@@ -30,12 +33,12 @@ def main():
             print(code_line)
             print('~^~'.rjust(le.column_num+1))
             print(le)
-        except SyntaxError as se:
-            code_line = code_lines[se.line_num[0]-1][:-1]
+        except SyntaxError as sy:
+            code_line = code_lines[sy.line_num[0]-1][:-1]
             print(code_line)
-            # code_line = code_lines[se.line_num-1][:-1]
-            # print(code_line)
-            print('~^~'.rjust(se.column_num[0]+1))
+            print('~^~'.rjust(sy.column_num[0]+1))
+            print(sy)
+        except SemanticError as se:
             print(se)
         
     except EOFError:
