@@ -3,7 +3,7 @@ from analyzers import LexicalAnalyzer, SyntaxAnalyzer, SemanticAnalyzer, Lexical
 from interpreter import Interpreter
 
 def main():
-    filepath = "tests/test2.pas"
+    filepath = "tests/test4.pas"
     
     with open(filepath, 'r') as f:
         code_lines = f.readlines()

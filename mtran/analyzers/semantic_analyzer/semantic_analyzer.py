@@ -58,8 +58,9 @@ class SemanticAnalyzer(AST_Visitor):
             
             
     def visit_case_compound(self, node):
-        self.visit_node(node.case)
+        case_type = self.visit_node(node.case)
         self.visit_node(node.result)
+        return case_type
     
     
     def visit_default_compound(self, node):
@@ -75,7 +76,9 @@ class SemanticAnalyzer(AST_Visitor):
                 addition=f"Can't assign '{node.left_node.value}': {left_type}" +
                     f" with '{node.right_node.value}': {right_type}",
                 message=ErrorTypes.ASSIGNMENT_ERRROR.value 
-            )  
+            )
+            
+        return left_type  
     
     
     def visit_jump_statement(self, node):
@@ -84,10 +87,17 @@ class SemanticAnalyzer(AST_Visitor):
     
     
     def visit_case_statement(self, node):
-        self.visit_node(node.condition)
+        condition_type = self.visit_node(node.condition)
         
         for case in node.case_list:
-            self.visit_node(case)
+            case_type = self.visit_node(case)
+            
+            if condition_type != case_type and case_type is not None:
+                self.error(
+                    addition=f"Can't execute condition {node.condition.value}: '{condition_type}'" + \
+                        f" with case compound {case.case.value}: {case_type}",
+                        message=ErrorTypes.CASE_COMPOUND_ERROR.value
+                )
     
     
     def visit_comparison(self, node):
@@ -112,7 +122,15 @@ class SemanticAnalyzer(AST_Visitor):
     
     def visit_input_statement(self, node):
         for input in node.input_list:
-            self.visit_node(input)
+            
+            if input.__class__.__name__ == "Variable":
+                self.visit_node(input)
+            else: 
+                self.error(
+                    addition=f"Can't pass argument: '{input.token.value}'" + \
+                        f" with type: '{input.__class__.__name__}'",
+                    message=ErrorTypes.INPUT_ERROR.value
+                )
     
     
     def visit_output_statement(self, node):
@@ -121,27 +139,57 @@ class SemanticAnalyzer(AST_Visitor):
     
     
     def visit_if_statement(self, node):
-        self.visit_node(node.comparison)
-        self.visit_node(node.statement)
+        condition_type = self.visit_node(node.comparison)
         
-        if node.next_statement is not None:
-            self.visit_node(node.next_statement)
+        if condition_type == TOKEN_TYPES.BOOLEAN.value:
+            self.visit_node(node.statement)
+            
+            if node.next_statement is not None:
+                self.visit_node(node.next_statement)
+        else:
+            self.error(
+                addition=f"Condition type is not BOOLEAN, but: '{condition_type}'",
+                message=ErrorTypes.IF_COMPARISON_ERROR.value
+            )
     
     
     def visit_for_statement(self, node):
-        self.visit_node(node.assgnment[0])
-        self.visit_node(node.border[0])
-        self.visit_node(node.statement)
+        assignment_type = self.visit_node(node.assignment[0])
+        border_type = self.visit_node(node.border[0])
+        
+        if assignment_type == border_type and \
+            assignment_type == TOKEN_TYPES.INTEGER.value and \
+                border_type == TOKEN_TYPES.INTEGER.value:
+            self.visit_node(node.statement)
+        else: 
+            self.error(
+                addition=f"Check execution conditions. Assignment type: {assignment_type}, " + 
+                f"border type: {border_type}",
+                message=ErrorTypes.FOR_LOOP_ERROR.value
+            )
     
     
     def visit_while_statement(self, node):
-        self.visit_node(node.border)
-        self.visit_node(node.statement)
+        border_type = self.visit_node(node.border)
+        
+        if border_type == TOKEN_TYPES.BOOLEAN.value:
+            self.visit_node(node.statement)
+        else:
+            self.error(
+                addition=f"Check execution conditions. Condition type: {border_type}",
+                message=ErrorTypes.WHILE_LOOP_ERROR.value
+            )
     
     
     def visit_repeat_statement(self, node):
         self.visit_node(node.statement[0])
-        self.visit_node(node.border)
+        border_type = self.visit_node(node.border)
+        
+        if border_type != TOKEN_TYPES.BOOLEAN.value:
+            self.error(
+                addition=f"check execution conditions. Condition type: {border_type}",
+                message=ErrorTypes.UNTIL_LOOP_ERROR.value
+            )
     
     
     def visit_variable(self, node):
@@ -211,7 +259,7 @@ class SemanticAnalyzer(AST_Visitor):
         
     
     def visit_unary_operation(self, node):
-        self.visit_node(node.expr)
+        return self.visit_node(node.expr)
         
         
     def visit_literal(self, node):
