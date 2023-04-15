@@ -95,6 +95,11 @@ class SemanticAnalyzer(AST_Visitor):
             self.visit_node(statement)
             
             
+    def visit_procedure_call(self, node):        
+        for param_node in node.actual_params:
+            self.visit_node(param_node)
+            
+            
     def visit_case_compound(self, node):
         case_type = self.visit_node(node.case)
         self.visit_node(node.result)

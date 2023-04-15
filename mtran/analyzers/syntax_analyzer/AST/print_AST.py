@@ -53,6 +53,13 @@ class AST_Printer(AST_Visitor):
         
         for statement in node.statement_list:
             self.visit_node(statement)
+            
+            
+    def visit_procedure_call(self, node):
+        self.print_message(f"Procedure call:")
+        
+        for param_node in node.actual_params:
+            self.visit_node(param_node)
 
 
     def visit_assignment_statement(self, node):

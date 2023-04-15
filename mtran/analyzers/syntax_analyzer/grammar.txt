@@ -27,6 +27,7 @@ statement_list : statement
                 | statement SEMICOLON statement_list
 
 statement : compound_statement
+            | procedure_call_statement
             | assignment_statement
             | input_statement
             | output_statement
@@ -35,6 +36,8 @@ statement : compound_statement
             | jump_statement
             | case_statement
             | empty
+
+procedure_call_statement : variable LPAREN (logic(COMMA logic)*)? RPAREN
 
 assignment_statement : variable (ASSINGMENT
                                 | PLUS_EQUAL

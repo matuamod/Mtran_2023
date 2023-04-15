@@ -201,6 +201,32 @@ class SyntaxAnalyzer(object):
         return type_node
 
 
+    def parse_procedure_call_statement(self):
+        token = self.current_token
+        
+        process_name = self.parse_variable()
+        self.eat(TOKEN_TYPES.LPAREN.value)
+        actual_params = list()
+        
+        if self.current_token.type != TOKEN_TYPES.RPAREN.value:
+            node = self.parse_logic()
+            actual_params.append(node)
+        
+        while self.current_token.type == TOKEN_TYPES.COMMA.value:
+            self.eat(TOKEN_TYPES.COMMA.value)
+            node = self.parse_logic()
+            actual_params.append(node)
+
+        self.eat(TOKEN_TYPES.RPAREN.value)
+        
+        node = ProcedureCall(
+            procedure_name=process_name,
+            actual_params=actual_params,
+            token=token
+        )
+        return node
+
+
     def parse_compound_statement(self):
         self.eat(TOKEN_TYPES.BEGIN.value)
         nodes_list = self.parse_statement_list()
@@ -235,7 +261,10 @@ class SyntaxAnalyzer(object):
                 node = self.parse_compound_statement()
 
             case TOKEN_TYPES.ID.value:
-                 node = self.parse_assignment_statement()
+                
+                if self.lexical_analyzer.current_char == "(":
+                    node = self.parse_procedure_call_statement()
+                else: node = self.parse_assignment_statement()
 
             case TOKEN_TYPES.READLN.value:
                 node = self.parse_input_statement()

@@ -31,6 +31,7 @@ BEGIN
         IF TRUE THEN
         BEGIN
             msg := 'Nice weather';
+            P1(3, 5, 2.15);
         END;
 
         FOR i := 0 TO 5 DO
@@ -40,14 +41,14 @@ BEGIN
 
             CASE s OF
                 1 : Capital := 'Moscow';
-                2 : Capital := 'Paris';
+                2 : P1(3, 5, 2.15);
                 3 : Capital := 'Rim';
                 ELSE Capital := 'No any country variant'; 
             END;
 
             WHILE i <= 3 DO
             BEGIN
-                WRITELN('While loop') 
+                WRITELN('While loop'); 
             END;
         END; 
     END
