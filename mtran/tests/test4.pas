@@ -4,6 +4,24 @@ VAR
     a : REAL;
     msg, Capital : STRING;
     first, second, third: BOOLEAN;
+
+    PROCEDURE P1 (los, sas : INTEGER; o : REAL);
+    VAR
+        w : REAL;
+        k : INTEGER;
+        name : STRING;
+
+        PROCEDURE P2;
+        VAR
+            a, z : INTEGER;
+        BEGIN {P2}
+            z := 777;
+        END;  {P2}
+
+    BEGIN {P1}
+        name := 'MTRAN';
+    END; {P1}
+
 BEGIN
     a := 2.15;
     x := x + y * 5 DIV 2 / 1;

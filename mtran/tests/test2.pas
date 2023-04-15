@@ -4,9 +4,9 @@ VAR
    a, b, c, x : INTEGER;
    y          : REAL;
 
-PROCEDURE P1;
+PROCEDURE P1 (sas : INTEGER);
 VAR
-   a : REAL;
+   w : REAL;
    k : INTEGER;
 
    PROCEDURE P2;

@@ -1,13 +1,14 @@
 from .semantic_error import SemanticError, ErrorTypes
 from ..syntax_analyzer import AST_Visitor
 from ..lexical_analyzer import TOKEN_TYPES
-from .symbols import SymbolTable, Symbol, VariableSymbol, BuiltinTypeSymbol
+from .symbols import ScopedSymbolTable, Symbol, VariableSymbol, BuiltinTypeSymbol, ProcedureSymbol
 
 class SemanticAnalyzer(AST_Visitor):
     
     def __init__(self, ast_tree):
         super().__init__(ast_tree)
-        self.symbol_table = SymbolTable()
+        # First scope before global
+        self.current_scope = None
         
         
     def error(self, addition, message):
@@ -15,7 +16,20 @@ class SemanticAnalyzer(AST_Visitor):
         
             
     def visit_program(self, node):
+        print("\n\n\nENTER scope: global")
+        global_scope = ScopedSymbolTable(
+            scope_name="global",
+            scope_level=1,
+            enclosing_scope=self.current_scope
+        )
+        self.current_scope = global_scope
+    
         self.visit_block(node.block)
+        
+        self.current_scope = self.current_scope.enclosing_scope
+        
+        print(global_scope)
+        print("LEAVE scope: global")
     
     
     def visit_block(self, node):
@@ -32,26 +46,50 @@ class SemanticAnalyzer(AST_Visitor):
         variable_name = node.variable_node.value
         type_name = node.type_node.value
         
-        if self.symbol_table.lookup(type_name) is None:
+        if self.current_scope.lookup(type_name) is None:
             type_symbol = BuiltinTypeSymbol(type_name)
-            self.symbol_table.insert(type_symbol)
+            self.current_scope.insert(type_symbol)
             
-        type_symbol = self.symbol_table.lookup(type_name)        
+        type_symbol = self.current_scope.lookup(type_name)        
         
-        if self.symbol_table.lookup(variable_name) is not None:
+        if self.current_scope.lookup(variable_name, True):
             self.error(
                 addition=f"Dublicate identifier '{variable_name}' was found",
                 message=ErrorTypes.DUBLICATE_ERROR.value
             )
         
         variable_symbol = VariableSymbol(variable_name, type_symbol)
-        self.symbol_table.insert(variable_symbol)
+        self.current_scope.insert(variable_symbol)
                 
         
     def visit_procedure_declaration(self, node):
+        procedure_name = node.name.value
+        procedure_symbol = ProcedureSymbol(name=procedure_name)
+        self.current_scope.insert(procedure_symbol)
+        
+        print(f"ENTER scope: {procedure_name}")
+        
+        procedure_scope = ScopedSymbolTable(
+            scope_name=procedure_name,
+            scope_level=self.current_scope.scope_level + 1,
+            enclosing_scope=self.current_scope
+        )
+        self.current_scope = procedure_scope
+        
+        if node.params:
+            for param in node.params:
+                self.visit_variable_declaration(param)
+                procedure_symbol.params.append(
+                    self.current_scope.lookup(param.variable_node.value))
+        
         self.visit_node(node.block_node)
-    
-
+        
+        self.current_scope = self.current_scope.enclosing_scope
+        
+        print(procedure_scope)
+        print(f"LEAVE scope: {procedure_name}")
+        
+        
     def visit_compound_statement(self, node):
         for statement in node.statement_list:
             self.visit_node(statement)
@@ -194,7 +232,7 @@ class SemanticAnalyzer(AST_Visitor):
     
     def visit_variable(self, node):
         variable_name = node.value
-        variable_symbol = self.symbol_table.lookup(variable_name)
+        variable_symbol = self.current_scope.lookup(variable_name)
     
         if variable_symbol is None:
             self.error(
@@ -280,4 +318,3 @@ class SemanticAnalyzer(AST_Visitor):
             
     def check_ast(self):
         self.start_visit()
-        print(self.symbol_table)

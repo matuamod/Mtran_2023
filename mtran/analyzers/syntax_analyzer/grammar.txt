@@ -5,8 +5,13 @@ program : PROGRAM variable SEMICOLON block DOT
 block : declaration compound_statement
 
 declaration : VAR (variable_declaration SEMICOLON)+
-                | (PROCEDURE variable SEMICOLON block SEMICOLON)*    
+                | (PROCEDURE variable (LPAREN formal_parameter_list RPAREN)? SEMICOLON block SEMICOLON)*    
                 | empty
+
+formal_parameter_list : formal_parameters
+                        | formal_parameters SEMICOLON formal_parameter_list
+
+formal_parameters : variable (COMMA variable)* COLON type_spec
 
 variable_declaration : variable (COMMA variable)* COLON type_spec
 

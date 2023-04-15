@@ -1,2 +1,2 @@
-from .symbol_table import SymbolTable
+from .symbol_table import ScopedSymbolTable
 from .symbols import *

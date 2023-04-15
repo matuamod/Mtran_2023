@@ -32,9 +32,25 @@ class VariableDeclaration(AST):
 
 class ProcedureDeclaration(AST):
 
-    def __init__(self, name, block):
+    def __init__(self, name, params, block):
         self.name = name
+        self.params = params
         self.block_node = block
+        
+
+class ProcedureParams(AST):
+    
+    def __init__(self, variable_node, type_node):
+        self.variable_node = variable_node
+        self.type_node = type_node
+        
+        
+class ProcedureCall(AST):
+    def __init__(self, procedure_name, actual_params, token):
+        self.procedure_name = procedure_name
+        self.actual_params = actual_params 
+        self.token = token
+
 
 class Type(AST):
 

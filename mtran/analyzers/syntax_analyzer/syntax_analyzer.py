@@ -110,6 +110,7 @@ class SyntaxAnalyzer(object):
 
     def parse_procedure_declaration(self):
         declaration_list = list()
+        params = None
 
         if self.current_token.type == TOKEN_TYPES.VAR.value:
             self.eat(TOKEN_TYPES.VAR.value)
@@ -122,6 +123,11 @@ class SyntaxAnalyzer(object):
             self.eat(TOKEN_TYPES.PROCEDURE.value)
             name = self.parse_variable()
             
+            if self.current_token.type == TOKEN_TYPES.LPAREN.value:
+                self.eat(TOKEN_TYPES.LPAREN.value)
+                params = self.parse_formal_parameter_list()
+                self.eat(TOKEN_TYPES.RPAREN.value)
+            
             if self.current_token.type != TOKEN_TYPES.SEMICOLON.value:
                 self.error(ErrorTypes.SEMICOLON_ERROR.value)
 
@@ -130,6 +136,7 @@ class SyntaxAnalyzer(object):
 
             proc_declaration =  ProcedureDeclaration(
                 name=name,
+                params=params,
                 block=block_node
             )
 
@@ -141,6 +148,41 @@ class SyntaxAnalyzer(object):
             self.eat(TOKEN_TYPES.SEMICOLON.value)
             
         return declaration_list
+    
+    
+    def parse_formal_parameter_list(self):
+        param_nodes = self.parse_formal_parameters()
+        
+        while self.current_token.type == TOKEN_TYPES.SEMICOLON.value:
+            self.eat(TOKEN_TYPES.SEMICOLON.value)
+            param_nodes.extend(self.parse_formal_parameters())
+            
+        if self.current_token.type == TOKEN_TYPES.ID.value:
+            self.error(ErrorTypes.IDENTIFIER_ERROR.value)
+
+        return param_nodes
+    
+    
+    def parse_formal_parameters(self):
+        param_nodes = list()
+        param_tokens = [self.parse_variable()]
+        
+        while self.current_token.type == TOKEN_TYPES.COMMA.value:
+            self.eat(TOKEN_TYPES.COMMA.value)
+            param_tokens.append(self.parse_variable())
+            
+        self.eat(TOKEN_TYPES.COLON.value)
+
+        type_node = self.parse_type_spec()
+        
+        for param_token in param_tokens:
+            param_node = ProcedureParams(
+                variable_node=param_token,
+                type_node=type_node
+            )
+            param_nodes.append(param_node)
+            
+        return param_nodes
 
 
     def parse_type_spec(self):
