@@ -46,10 +46,12 @@ class ProcedureParams(AST):
         
         
 class ProcedureCall(AST):
+    
     def __init__(self, procedure_name, actual_params, token):
         self.procedure_name = procedure_name
         self.actual_params = actual_params 
         self.token = token
+        self.procedure_symbol = None
 
 
 class Type(AST):

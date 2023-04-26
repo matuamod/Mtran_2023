@@ -40,12 +40,12 @@ class ScopedSymbolTable(object):
     
     
     def insert(self, symbol):
-        print(f"Insert: {symbol.name}")
+        # print(f"Insert: {symbol.name}")
         self.symbols_dict[symbol.name] = symbol
         
         
     def lookup(self, name, current_scope_only=False):
-        print(f"Lookup: {name}")
+        # print(f"Lookup: {name}")
         symbol = self.symbols_dict.get(name)
         
         if symbol is not None:

@@ -16,20 +16,15 @@ class SemanticAnalyzer(AST_Visitor):
         
             
     def visit_program(self, node):
-        print("\n\n\nENTER scope: global")
         global_scope = ScopedSymbolTable(
             scope_name="global",
             scope_level=1,
             enclosing_scope=self.current_scope
         )
         self.current_scope = global_scope
-    
         self.visit_block(node.block)
-        
         self.current_scope = self.current_scope.enclosing_scope
-        
         print(global_scope)
-        print("LEAVE scope: global")
     
     
     def visit_block(self, node):
@@ -66,9 +61,7 @@ class SemanticAnalyzer(AST_Visitor):
         procedure_name = node.name.value
         procedure_symbol = ProcedureSymbol(name=procedure_name)
         self.current_scope.insert(procedure_symbol)
-        
-        print(f"ENTER scope: {procedure_name}")
-        
+                
         procedure_scope = ScopedSymbolTable(
             scope_name=procedure_name,
             scope_level=self.current_scope.scope_level + 1,
@@ -83,11 +76,11 @@ class SemanticAnalyzer(AST_Visitor):
                     self.current_scope.lookup(param.variable_node.value))
         
         self.visit_node(node.block_node)
+        procedure_symbol.block = node.block_node
         
         self.current_scope = self.current_scope.enclosing_scope
         
         print(procedure_scope)
-        print(f"LEAVE scope: {procedure_name}")
         
         
     def visit_compound_statement(self, node):
@@ -98,6 +91,9 @@ class SemanticAnalyzer(AST_Visitor):
     def visit_procedure_call(self, node):        
         for param_node in node.actual_params:
             self.visit_node(param_node)
+            
+        procedure_symbol = self.current_scope.lookup(node.procedure_name.value)
+        node.procedure_symbol = procedure_symbol
             
             
     def visit_case_compound(self, node):

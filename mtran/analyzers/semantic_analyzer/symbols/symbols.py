@@ -40,6 +40,7 @@ class ProcedureSymbol(Symbol):
     def __init__(self, name, params=None):
         super().__init__(name)
         self.params = params if params is not None else list()
+        self.block = None
         
     def __str__(self):
         return "<{class_name}(name='{name}', parameters='{params}')>".format(

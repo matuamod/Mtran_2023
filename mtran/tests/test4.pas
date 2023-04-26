@@ -56,4 +56,11 @@ BEGIN
         READLN(x, y);
         WRITELN('Hello Matua');
         a := - - - 3.14;
+        i := 0;
+        REPEAT
+        BEGIN
+            WRITELN('Repeat loop');
+            i := i + 1;
+        END
+        UNTIL i>3;
 END. 

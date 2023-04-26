@@ -3,7 +3,7 @@ from analyzers import LexicalAnalyzer, SyntaxAnalyzer, SemanticAnalyzer, Lexical
 from interpreter import Interpreter
 
 def main():
-    filepath = "tests/test4.pas"
+    filepath = "tests/test3.pas"
     
     with open(filepath, 'r') as f:
         code_lines = f.readlines()
@@ -24,10 +24,9 @@ def main():
             semantic_analyzer = SemanticAnalyzer(ast_tree)
             semantic_analyzer.check_ast()
 
-            # interpreter = Interpreter(syntax_analyzer)
-            # result = interpreter.evaluate()
-            # print(result)
-            # print(interpreter.GLOBAL_SCOPE)
+            interpreter = Interpreter(ast_tree)
+            interpreter.evaluate()
+
         except LexicalError as le:
             code_line = code_lines[le.line_num-1][:-1]
             print(code_line)
@@ -39,6 +38,7 @@ def main():
             print('~^~'.rjust(sy.column_num[0]+1))
             print(sy)
         except SemanticError as se:
+            print("\n\n\n")
             print(se)
         
     except EOFError:
