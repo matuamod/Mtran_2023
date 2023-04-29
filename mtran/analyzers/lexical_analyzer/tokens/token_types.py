@@ -5,6 +5,7 @@ class TOKEN_TYPES(Enum):
     PROGRAM = "PROGRAM" #
 
     PROCEDURE = "PROCEDURE" #
+    FUNCTION = "FUNCTION" #
 
     BEGIN = "BEGIN" #
 

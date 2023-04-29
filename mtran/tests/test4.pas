@@ -24,7 +24,8 @@ VAR
 
 BEGIN
     a := 2.15;
-    x := x + y * 5 DIV 2 / 1;
+    x := x + y * 5 DIV 2;
+    a := 2.15 / 2;
     
     IF a > x THEN
     BEGIN
@@ -46,14 +47,15 @@ BEGIN
                 ELSE Capital := 'No any country variant'; 
             END;
 
+            i := 0;
             WHILE i <= 3 DO
             BEGIN
                 WRITELN('While loop'); 
+                i += 1;
             END;
         END; 
     END
     ELSE
-        READLN(x, y);
         WRITELN('Hello Matua');
         a := - - - 3.14;
         i := 0;
@@ -62,5 +64,5 @@ BEGIN
             WRITELN('Repeat loop');
             i := i + 1;
         END
-        UNTIL i>3;
+        UNTIL i > 3;
 END. 

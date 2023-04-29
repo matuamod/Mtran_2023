@@ -303,7 +303,16 @@ class SyntaxAnalyzer(object):
         token = self.current_token
         """Eat all assignment sign"""
         
-        if token.type != TOKEN_TYPES.ASSINGMENT.value:
+        # if token.type != TOKEN_TYPES.ASSINGMENT.value:
+        #     self.error(ErrorTypes.ASSIGNMENT_ERRROR.value)
+        # else:
+        if token.type not in (
+            TOKEN_TYPES.ASSINGMENT.value, 
+            TOKEN_TYPES.PLUS_EQUAL.value,
+            TOKEN_TYPES.MINUS_EQUAL.value, 
+            TOKEN_TYPES.MUL_EQUAL.value,
+            TOKEN_TYPES.DIV_EQUAL.value
+        ):
             self.error(ErrorTypes.ASSIGNMENT_ERRROR.value)
         else:
             self.eat(token.type)
@@ -314,7 +323,7 @@ class SyntaxAnalyzer(object):
                 token=token, 
                 right_node=right_node
                 )
-        
+            
         return node
         
 

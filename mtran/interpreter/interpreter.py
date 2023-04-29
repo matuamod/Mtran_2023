@@ -2,6 +2,7 @@ from operator import xor
 from analyzers import TOKEN_TYPES
 from analyzers.syntax_analyzer import AST_Visitor
 from .stack import CallStack, Record, RecordType
+import time
 
 class Interpreter(AST_Visitor):
 
@@ -41,10 +42,6 @@ class Interpreter(AST_Visitor):
         self.visit_node(node.variable_node)
         self.visit_node(node.type_node)
     
-    
-    def visit_procedure_declaration(self, node):
-        pass
-    
 
     def visit_compound_statement(self, node):
         for statement in node.statement_list:
@@ -81,60 +78,159 @@ class Interpreter(AST_Visitor):
         variable_value = self.visit_node(node.right_node)
     
         curr_record = self.call_stack.peek()
-        curr_record[variable_name] = variable_value
+        
+        if node.operation.type == TOKEN_TYPES.ASSINGMENT.value:
+            curr_record[variable_name] = variable_value
+        else:
+            curr_value = curr_record.get(variable_name)
+            
+            if curr_value == None: 
+                curr_record[variable_name] = 0
+                curr_value = curr_record.get(variable_name)
+                
+            curr_value += variable_value
 
     
     def visit_case_statement(self, node):
-        pass
+        condition = self.visit_node(node.condition)
+        
+        for case in node.case_list:
+            case_value, result = self.visit_node(case)
+
+            if case_value == condition:
+                self.visit_node(result)
+                return
+            elif case_value == "Else":
+                self.visit_node(result)
     
     
     def visit_case_compound(self, node):
-        pass
+        case_value = self.visit_node(node.case)
+        result = node.result
+        return case_value, result
     
     
     def visit_default_compound(self, node):
-        pass
+        default = node.default
+        result = node.result
+        return default, result
 
 
-    def visit_comparison(self, node):
-        left_part = self.visit_node(node.left_node)
-        right_part = self.visit_node(node.right_node)
+    def visit_comparison(self, node): 
+        left_side = self.visit_node(node.left_node)
+        right_side = self.visit_node(node.right_node)
+        
+        match(node.operation.type):
+            case TOKEN_TYPES.EQUAL.value:
+                return True if left_side == right_side else False
+            
+            case TOKEN_TYPES.NONEQUAL.value:
+                return True if left_side != right_side else False
+            
+            case TOKEN_TYPES.GREATER.value:
+                return True if left_side > right_side else False
+            
+            case TOKEN_TYPES.LESS.value:
+                return True if left_side < right_side else False
+            
+            case TOKEN_TYPES.GREATER_OR_EQUAL.value:
+                return True if left_side >= right_side else False
+            
+            case TOKEN_TYPES.LESS_OR_EQUAL.value:
+                return True if left_side <= right_side else False
     
     
     def visit_input_statement(self, node):
-        pass
+        curr_record = self.call_stack.peek()
+        
+        for input_var in node.input_list:
+            input_value = input(f"Input {input_var.value}: ")
+            
+            match(input_var.token.type):
+                case TOKEN_TYPES.INTEGER.value:
+                    curr_record[input_var.value] = int(input_value)
+                    
+                case TOKEN_TYPES.REAL.value:
+                    curr_record[input_var.value] = float(input_value)
+                    
+                case _:
+                    curr_record[input_var.value] = str(input_value)
     
     
-    def visit_output_statement(self, node):
-        pass
+    def visit_output_statement(self, node):        
+        for output in node.output_list:
+            print(f"Output: {self.visit_node(output)}")
     
     
     def visit_if_statement(self, node):
-        pass
+        comparison = self.visit_node(node.comparison)
+        
+        if comparison:
+            self.visit_node(node.statement)
+            return
+        if node.next_statement != None:
+            self.visit_node(node.next_statement)
     
     
     def visit_for_statement(self, node):
-        pass
+        assignment_value = self.visit_node(node.assignment[0].right_node)
+        border_value = self.visit_node(node.border[0])
+        
+        if assignment_value < border_value:
+            
+            while assignment_value < border_value:
+                self.visit_node(node.statement)
+                assignment_value += 1
     
     
     def visit_while_statement(self, node):
-        pass
+        while self.visit_node(node.border):
+            
+            if node.border.__class__.__name__ == "ComparisonStatement":
+                if node.border.left_node.__class__.__name__ == "Variable":
+                    curr_record = self.call_stack.peek()
+                    left_side = curr_record.get(node.border.left_node.value)
+                    left_side += 1
+                    curr_record[node.border.left_node.value] = left_side
+    
+            self.visit_node(node.statement)
     
     
     def visit_repeat_statement(self, node):
-        pass
+        self.visit_node(node.statement[0])
+        
+        while self.visit_node(node.border):
+            
+            if node.border.__class__.__name__ == "ComparisonStatement":
+                if node.border.left_node.__class__.__name__ == "Variable":
+                    curr_record = self.call_stack.peek()
+                    left_side = curr_record.get(node.border.left_node.value)
+                    left_side += 1
+                    curr_record[node.border.left_node.value] = left_side
+    
+            self.visit_node(node.statement[0])
 
 
     def visit_variable(self, node):
         variable_name = node.value
         curr_record = self.call_stack.peek()
-        
         variable_value = curr_record.get(variable_name)
+        
+        if variable_value == None:   
+                     
+            if node.variable_type in (
+                TOKEN_TYPES.INTEGER.value,
+                TOKEN_TYPES.REAL.value
+            ): return 0
+            else: return str()
+            
         return variable_value
         
         
     def visit_literal(self, node):
-        return node.value
+        if node.value == "TRUE": return True
+        elif node.value == "FALSE": return False
+        else: return node.value
     
     
     def visit_number(self, node):
@@ -176,6 +272,10 @@ class Interpreter(AST_Visitor):
         else: return -self.visit_node(node.expr)
         
         
+    def visit_procedure_declaration(self, node):
+        pass
+    
+    
     def visit_jump_statement(self, node):
         pass
     

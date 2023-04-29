@@ -54,6 +54,8 @@ class SemanticAnalyzer(AST_Visitor):
             )
         
         variable_symbol = VariableSymbol(variable_name, type_symbol)
+        node.variable_node.variable_type = type_symbol.name
+        
         self.current_scope.insert(variable_symbol)
                 
         
@@ -240,6 +242,8 @@ class SemanticAnalyzer(AST_Visitor):
                 addition=f"Symbol(identifier) was not found: '{variable_name}'",
                 message=ErrorTypes.SYMBOL_ERROR.value
             )
+                
+        node.variable_type = variable_symbol.type.name
             
         return variable_symbol.type.name
         
