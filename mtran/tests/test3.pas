@@ -3,13 +3,15 @@ VAR
     x, y : INTEGER;
     str : STRING;
 
-    PROCEDURE Fibonachi(index: INTEGER);
+    FUNCTION fib(n: INTEGER): INTEGER;
     VAR
         fib: INTEGER;
     BEGIN
         IF n <= 2 THEN
+        BEGIN
             fib := 1;
-        ELSE
+        END
+        ELSE 
             fib := fib(n-1) + fib(n-2);
     END;
 
@@ -78,7 +80,8 @@ BEGIN { Main }
    y := 7;
    x := (y + 3) * 13;
    str := 'Matuamod';
-   READLN(x, y, str);
    WRITELN(x, y, str);
    P1(3, 5, 2.15);
+   y := fib(0);
+   WRITELN(y);
 END.  { Main }

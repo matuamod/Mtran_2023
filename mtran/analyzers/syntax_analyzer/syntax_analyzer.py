@@ -22,6 +22,8 @@ class SyntaxAnalyzer(object):
 
 
     def eat(self, token_type):
+        print(self.current_token.type)
+        print(token_type)
         if self.current_token.type == token_type:
             self.current_token = self.lexical_analyzer.get_next_token()
             self.conf.fill_table(self.current_token)
@@ -31,7 +33,8 @@ class SyntaxAnalyzer(object):
 
     def parse_program(self):
         self.eat(TOKEN_TYPES.PROGRAM.value)
-        variable_node = self.parse_variable()
+        variable_node = Variable(self.current_token)
+        self.eat(TOKEN_TYPES.ID.value)
         name = variable_node.value
         
         if self.current_token.type != TOKEN_TYPES.SEMICOLON.value:
@@ -69,7 +72,8 @@ class SyntaxAnalyzer(object):
 
             # Iteration is actual for current line in VAR statement
             while self.current_token.type == TOKEN_TYPES.ID.value or \
-                self.current_token.type == TOKEN_TYPES.PROCEDURE.value:
+                self.current_token.type == TOKEN_TYPES.PROCEDURE.value or \
+                    self.current_token.type == TOKEN_TYPES.FUNCTION.value:
 
                 if self.current_token.type == TOKEN_TYPES.ID.value:
                     var_declaration = self.parse_variable_declaration()
@@ -82,6 +86,9 @@ class SyntaxAnalyzer(object):
                 elif self.current_token.type == TOKEN_TYPES.PROCEDURE.value:
                     proc_declaration = self.parse_procedure_declaration()
                     declaration.declaration_list.extend(proc_declaration)
+                elif self.current_token.type == TOKEN_TYPES.FUNCTION.value:
+                    func_declaration = self.parse_function_declaration()
+                    declaration.declaration_list.extend(func_declaration)
 
         return declaration
 
@@ -121,7 +128,9 @@ class SyntaxAnalyzer(object):
 
         while self.current_token.type == TOKEN_TYPES.PROCEDURE.value:
             self.eat(TOKEN_TYPES.PROCEDURE.value)
-            name = self.parse_variable()
+            variable_node = Variable(self.current_token)
+            self.eat(TOKEN_TYPES.ID.value)
+            name = variable_node
             
             if self.current_token.type == TOKEN_TYPES.LPAREN.value:
                 self.eat(TOKEN_TYPES.LPAREN.value)
@@ -141,6 +150,54 @@ class SyntaxAnalyzer(object):
             )
 
             declaration_list.append(proc_declaration)
+            
+            if self.current_token.type != TOKEN_TYPES.SEMICOLON.value:
+                self.error(ErrorTypes.SEMICOLON_ERROR.value)
+            
+            self.eat(TOKEN_TYPES.SEMICOLON.value)
+            
+        return declaration_list
+    
+    
+    def parse_function_declaration(self):
+        declaration_list = list()
+        params = None
+
+        if self.current_token.type == TOKEN_TYPES.VAR.value:
+            self.eat(TOKEN_TYPES.VAR.value)
+
+            while self.current_token.type == TOKEN_TYPES.ID.value:
+                var_declaration = self.parse_variable_declaration()
+                declaration_list.extend(var_declaration)
+
+        while self.current_token.type == TOKEN_TYPES.FUNCTION.value:
+            self.eat(TOKEN_TYPES.FUNCTION.value)
+            variable_node = Variable(self.current_token)
+            self.eat(TOKEN_TYPES.ID.value)
+            name = variable_node
+            
+            if self.current_token.type == TOKEN_TYPES.LPAREN.value:
+                self.eat(TOKEN_TYPES.LPAREN.value)
+                params = self.parse_formal_parameter_list()
+                self.eat(TOKEN_TYPES.RPAREN.value)
+            
+            self.eat(TOKEN_TYPES.COLON.value)
+            ret_type = self.parse_type_spec()
+            
+            if self.current_token.type != TOKEN_TYPES.SEMICOLON.value:
+                self.error(ErrorTypes.SEMICOLON_ERROR.value)
+
+            self.eat(TOKEN_TYPES.SEMICOLON.value)
+            block_node = self.parse_block()
+
+            func_declaration =  FunctionDeclaration(
+                name=name,
+                params=params,
+                ret_type=ret_type,
+                block=block_node
+            )
+
+            declaration_list.append(func_declaration)
             
             if self.current_token.type != TOKEN_TYPES.SEMICOLON.value:
                 self.error(ErrorTypes.SEMICOLON_ERROR.value)
@@ -176,7 +233,7 @@ class SyntaxAnalyzer(object):
         type_node = self.parse_type_spec()
         
         for param_token in param_tokens:
-            param_node = ProcedureParams(
+            param_node = Params(
                 variable_node=param_token,
                 type_node=type_node
             )
@@ -201,10 +258,10 @@ class SyntaxAnalyzer(object):
         return type_node
 
 
-    def parse_procedure_call_statement(self):
+    def parse_call_statement(self):
         token = self.current_token
         
-        process_name = self.parse_variable()
+        name = self.parse_variable()
         self.eat(TOKEN_TYPES.LPAREN.value)
         actual_params = list()
         
@@ -219,8 +276,8 @@ class SyntaxAnalyzer(object):
 
         self.eat(TOKEN_TYPES.RPAREN.value)
         
-        node = ProcedureCall(
-            procedure_name=process_name,
+        node = CallStatement(
+            name=name,
             actual_params=actual_params,
             token=token
         )
@@ -263,7 +320,7 @@ class SyntaxAnalyzer(object):
             case TOKEN_TYPES.ID.value:
                 
                 if self.lexical_analyzer.current_char == "(":
-                    node = self.parse_procedure_call_statement()
+                    node = self.parse_call_statement()
                 else: node = self.parse_assignment_statement()
 
             case TOKEN_TYPES.READLN.value:
@@ -620,8 +677,12 @@ class SyntaxAnalyzer(object):
             else:
                 self.error(ErrorTypes.CONSTANT_ERROR.value)
                  
+        elif self.current_token.type == TOKEN_TYPES.ID.value and \
+            self.lexical_analyzer.current_char == "(":
+                return self.parse_call_statement()
+        
         elif token.type == TOKEN_TYPES.LPAREN.value:
-            return self.parse_paren()
+            return self.parse_paren() 
         
         else:
             return self.parse_variable()

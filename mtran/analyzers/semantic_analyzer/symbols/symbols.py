@@ -50,3 +50,22 @@ class ProcedureSymbol(Symbol):
         )
 
     __repr__ = __str__
+    
+    
+class FunctionSymbol(Symbol):
+    
+    def __init__(self, name, ret_type, params=None):
+        super().__init__(name)
+        self.ret_type = ret_type
+        self.params = params if params is not None else list()
+        self.block = None
+        
+    def __str__(self):
+        return "<{class_name}(name='{name}', return type='{ret_type}' parameters='{params}')>".format(
+            class_name=self.__class__.__name__,
+            name=self.name,
+            ret_type=self.ret_type,
+            params=self.params
+        )
+
+    __repr__ = __str__

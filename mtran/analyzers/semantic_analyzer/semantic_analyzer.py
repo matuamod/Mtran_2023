@@ -1,7 +1,7 @@
 from .semantic_error import SemanticError, ErrorTypes
 from ..syntax_analyzer import AST_Visitor
 from ..lexical_analyzer import TOKEN_TYPES
-from .symbols import ScopedSymbolTable, Symbol, VariableSymbol, BuiltinTypeSymbol, ProcedureSymbol
+from .symbols import ScopedSymbolTable, Symbol, VariableSymbol, BuiltinTypeSymbol, ProcedureSymbol, FunctionSymbol
 
 class SemanticAnalyzer(AST_Visitor):
     
@@ -85,17 +85,51 @@ class SemanticAnalyzer(AST_Visitor):
         print(procedure_scope)
         
         
+    def visit_function_declaration(self, node):
+        function_name = node.name.value
+        function_type = node.ret_type
+        function_symbol = FunctionSymbol(name=function_name, ret_type=function_type)
+        self.current_scope.insert(function_symbol)
+                
+        function_scope = ScopedSymbolTable(
+            scope_name=function_name,
+            scope_level=self.current_scope.scope_level + 1,
+            enclosing_scope=self.current_scope
+        )
+        self.current_scope = function_scope
+        
+        if node.params:
+            for param in node.params:
+                self.visit_variable_declaration(param)
+                function_symbol.params.append(
+                    self.current_scope.lookup(param.variable_node.value))
+        
+        self.visit_node(node.block_node)
+        function_symbol.block = node.block_node
+        
+        self.current_scope = self.current_scope.enclosing_scope
+        
+        print(function_scope)
+        
+        
     def visit_compound_statement(self, node):
         for statement in node.statement_list:
             self.visit_node(statement)
             
             
-    def visit_procedure_call(self, node):        
+    def visit_call(self, node):        
         for param_node in node.actual_params:
             self.visit_node(param_node)
             
-        procedure_symbol = self.current_scope.lookup(node.procedure_name.value)
-        node.procedure_symbol = procedure_symbol
+        symbol = self.current_scope.lookup(node.name.value)
+        
+        if symbol.name == self.current_scope.scope_name:
+            symbol = self.current_scope.enclosing_scope.lookup(node.name.value)
+        
+        node.symbol = symbol
+        
+        if symbol.__class__.__name__ == "FunctionSymbol":
+            return symbol.ret_type
             
             
     def visit_case_compound(self, node):
@@ -113,11 +147,23 @@ class SemanticAnalyzer(AST_Visitor):
         right_type = self.visit_node(node.right_node)
         
         if left_type != right_type:
-            self.error(
-                addition=f"Can't assign '{node.left_node.value}': {left_type}" +
-                    f" with '{node.right_node.value}': {right_type}",
-                message=ErrorTypes.ASSIGNMENT_ERRROR.value 
-            )
+            if node.left_node.__class__.__name__ == "CallStatement":
+                self.error(
+                    addition=f"Can't assign '{node.left_node.name.value}': {left_type}" +
+                        f" with '{node.right_node.value}': {right_type}",
+                    message=ErrorTypes.ASSIGNMENT_ERRROR.value 
+                )
+            if node.right_node.__class__.__name__ == "CallStatement":
+                self.error(
+                    addition=f"Can't assign '{node.left_node.value}': {left_type}" +
+                        f" with '{node.right_node.name.value}': {right_type}",
+                    message=ErrorTypes.ASSIGNMENT_ERRROR.value 
+                )
+            else: self.error(
+                    addition=f"Can't assign '{node.left_node.value}': {left_type}" +
+                        f" with '{node.right_node.value}': {right_type}",
+                    message=ErrorTypes.ASSIGNMENT_ERRROR.value 
+                )
             
         return left_type  
     
@@ -154,11 +200,24 @@ class SemanticAnalyzer(AST_Visitor):
             return TOKEN_TYPES.BOOLEAN.value
         else:
             operation = f"make '{node.operation.type.lower()}' operation"
-            self.error(
-                addition=f"Can't {operation} for '{node.left_node.value}': {left_type}" +
+            
+            if node.left_node.__class__.__name__ == "CallStatement":
+                self.error(
+                addition=f"Can't {operation} for '{node.left_node.name.value}': {left_type}" +
                     f" with '{node.right_node.value}': {right_type}",
                 message=ErrorTypes.COMPARISON_ERROR.value 
-            )
+                )
+            elif node.right_node.__class__.__name__ == "CallStatement":
+                self.error(
+                addition=f"Can't {operation} for '{node.left_node.value}': {left_type}" +
+                    f" with '{node.right_node.value.value}': {right_type}",
+                message=ErrorTypes.COMPARISON_ERROR.value 
+                )
+            else: self.error(
+                    addition=f"Can't {operation} for '{node.left_node.value}': {left_type}" +
+                        f" with '{node.right_node.value}': {right_type}",
+                    message=ErrorTypes.COMPARISON_ERROR.value 
+                )
     
     
     def visit_input_statement(self, node):
@@ -254,11 +313,24 @@ class SemanticAnalyzer(AST_Visitor):
         
         if left_type != right_type:
             operation = f"make '{node.operation.type.lower()}' operation"
-            self.error(
-                addition=f"Can't {operation} for '{node.left_node.value}': {left_type}" +
-                    f" with '{node.right_node.value}': {right_type}",
-                message=ErrorTypes.LOGICAL_OP_ERROR.value 
-            )
+            
+            if node.left_node.__class__.__name__ == "CallStatement":
+                self.error(
+                    addition=f"Can't {operation} for '{node.left_node.name.value}': {left_type}" +
+                        f" with '{node.right_node.value}': {right_type}",
+                    message=ErrorTypes.LOGICAL_OP_ERROR.value
+                )
+            elif  node.right_node.__class__.__name__ == "CallStatement":
+                self.error(
+                    addition=f"Can't {operation} for '{node.left_node.value}': {left_type}" +
+                        f" with '{node.right_node.name.value}': {right_type}",
+                    message=ErrorTypes.LOGICAL_OP_ERROR.value
+                )
+            else: self.error(
+                    addition=f"Can't {operation} for '{node.left_node.value}': {left_type}" +
+                        f" with '{node.right_node.value}': {right_type}",
+                    message=ErrorTypes.LOGICAL_OP_ERROR.value 
+                )
             
         return TOKEN_TYPES.BOOLEAN.value
     
@@ -294,11 +366,26 @@ class SemanticAnalyzer(AST_Visitor):
                         return TOKEN_TYPES.STRING.value 
         
         operation = f"make '{node.operation.type.lower()}' operation"
-        self.error(
-            addition=f"Can't {operation} for '{node.left_node.value}': {left_type}" +
-                f" with '{node.right_node.value}': {right_type}",
-            message=ErrorTypes.BINARY_OP_ERROR.value 
-        )  
+        
+        print(node.left_node.__class__.__name__)
+        
+        if node.left_node.__class__.__name__ == "CallStatement":
+            self.error(
+                addition=f"Can't {operation} for '{node.left_node.name.value}': {left_type}" +
+                    f" with '{node.right_node.value}': {right_type}",
+                message=ErrorTypes.BINARY_OP_ERROR.value 
+            )
+        elif node.right_node.__class__.__name__ == "CallStatement":
+            self.error(
+                addition=f"Can't {operation} for '{node.left_node.value}': {left_type}" +
+                    f" with '{node.right_node.name.value}': {right_type}",
+                message=ErrorTypes.BINARY_OP_ERROR.value 
+            )
+        else: self.error(
+                addition=f"Can't {operation} for '{node.left_node.value}': {left_type}" +
+                    f" with '{node.right_node.value}': {right_type}",
+                message=ErrorTypes.BINARY_OP_ERROR.value 
+            )  
         
     
     def visit_unary_operation(self, node):

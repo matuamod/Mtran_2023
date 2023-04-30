@@ -5,7 +5,8 @@ program : PROGRAM variable SEMICOLON block DOT
 block : declaration compound_statement
 
 declaration : VAR (variable_declaration SEMICOLON)+
-                | (PROCEDURE variable (LPAREN formal_parameter_list RPAREN)? SEMICOLON block SEMICOLON)*    
+                | (PROCEDURE variable (LPAREN formal_parameter_list RPAREN)? SEMICOLON block SEMICOLON)*  
+                | (FUNCTION variable (LPAREN formal_parameter_list RPAREN)? COLON type_spec SEMICOLON block SEMICOLON)*   
                 | empty
 
 formal_parameter_list : formal_parameters
@@ -27,7 +28,7 @@ statement_list : statement
                 | statement SEMICOLON statement_list
 
 statement : compound_statement
-            | procedure_call_statement
+            | call_statement
             | assignment_statement
             | input_statement
             | output_statement
@@ -38,6 +39,8 @@ statement : compound_statement
             | empty
 
 procedure_call_statement : variable LPAREN (logic(COMMA logic)*)? RPAREN
+
+function_call_statement : variable LPAREN (logic(COMMA logic)*)? RPAREN
 
 assignment_statement : variable (ASSINGMENT
                                 | PLUS_EQUAL
@@ -87,7 +90,6 @@ factor : PLUS factor
         | CHAR_CONST
         | STRING_CONST
         | BOOLEAN_CONST
-        | comparison_statement
         | paren
         | variable
 

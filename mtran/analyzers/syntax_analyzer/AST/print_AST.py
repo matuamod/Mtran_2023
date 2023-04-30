@@ -42,6 +42,20 @@ class AST_Printer(AST_Visitor):
                 self.visit_node(param.type_node)
         
         self.visit_node(node.block_node)
+
+
+    def visit_function_declaration(self, node):
+        self.print_message(f"Function {node.name.value}")
+        
+        if node.params:
+            self.print_message(f"Params declaration:")
+        
+            for param in node.params:
+                self.visit_node(param.variable_node)
+                self.visit_node(param.type_node)
+        
+        self.print_message(f"Return type: {node.ret_type}")
+        self.visit_node(node.block_node)
          
 
     def visit_type_dec(self, node):
@@ -55,12 +69,12 @@ class AST_Printer(AST_Visitor):
             self.visit_node(statement)
             
             
-    def visit_procedure_call(self, node):
-        self.print_message(f"Procedure call:")
+    def visit_call(self, node):
+        self.print_message(f"CallStatement:")
         
         for param_node in node.actual_params:
             self.visit_node(param_node)
-
+  
 
     def visit_assignment_statement(self, node):
         self.print_message(f"Assignment:")

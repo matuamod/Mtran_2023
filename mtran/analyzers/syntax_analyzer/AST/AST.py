@@ -38,21 +38,30 @@ class ProcedureDeclaration(AST):
         self.block_node = block
         
 
-class ProcedureParams(AST):
+class Params(AST):
     
     def __init__(self, variable_node, type_node):
         self.variable_node = variable_node
         self.type_node = type_node
         
         
-class ProcedureCall(AST):
+class CallStatement(AST):
     
-    def __init__(self, procedure_name, actual_params, token):
-        self.procedure_name = procedure_name
+    def __init__(self, name, actual_params, token):
+        self.name = name
         self.actual_params = actual_params 
         self.token = token
-        self.procedure_symbol = None
-
+        self.symbol = None
+        
+        
+class FunctionDeclaration(AST):
+    
+    def __init__(self, name, params, ret_type, block):
+        self.name = name
+        self.params = params
+        self.ret_type = ret_type.value
+        self.block_node = block
+        
 
 class Type(AST):
 

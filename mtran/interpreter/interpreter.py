@@ -48,29 +48,44 @@ class Interpreter(AST_Visitor):
             self.visit_node(statement)
             
             
-    def visit_procedure_call(self, node):
-        procedure_name = node.procedure_name.value
+    def visit_call(self, node):
+        call_name = node.name.value
         curr_nesting_level = self.call_stack.peek().nesting_level
+        symbol = node.symbol
         
-        record = Record(
-            name=procedure_name,
-            type=RecordType.PROCEDURE.value,
-            nesting_level=curr_nesting_level+1
-        )
+        if symbol.__class__.__name__ == "FunctionSymbol":    
+            record = Record(
+                name=call_name,
+                type=RecordType.FUNCTION.value,
+                nesting_level=curr_nesting_level+1
+            )
+        elif symbol.__class__.__name__ == "ProcedureSymbol":
+            record = Record(
+                name=call_name,
+                type=RecordType.PROCEDURE.value,
+                nesting_level=curr_nesting_level+1
+            )
         
-        procedure_symbol = node.procedure_symbol
-        params = procedure_symbol.params
+        params = symbol.params
         actual_params = node.actual_params
         
         for param, actual_param in zip(params, actual_params):
             record[param.name] = self.visit_node(actual_param)
             
-        print(f"Enter PROCEDURE {procedure_name}")
+        # print(f"Enter {symbol.__class__.__name__} {call_name}")
         self.call_stack.push(record)
-        self.visit_node(procedure_symbol.block)
-        print(str(self.call_stack))
+        self.visit_node(symbol.block)
+        # print(str(self.call_stack))
+        
+        if symbol.__class__.__name__ == "FunctionSymbol":
+            ret_value = self.call_stack.peek().get(call_name)
+            self.call_stack.pop()
+            # print(f"Call result: {ret_value}")
+            # print(f"Leave {symbol.__class__.__name__} {call_name}")
+            return ret_value
+        
         self.call_stack.pop()
-        print(f"Leave PROCEDURE {procedure_name}")
+        # print(f"Leave {symbol.__class__.__name__} {call_name}")
 
 
     def visit_assignment_statement(self, node):
@@ -272,6 +287,10 @@ class Interpreter(AST_Visitor):
         else: return -self.visit_node(node.expr)
         
         
+    def visit_function_declaration(self, node):
+        pass
+    
+    
     def visit_procedure_declaration(self, node):
         pass
     

@@ -11,9 +11,10 @@ class AST_Visitor(ABC):
             Declaration : self.visit_declaration,
             VariableDeclaration : self.visit_variable_declaration,
             ProcedureDeclaration : self.visit_procedure_declaration,
+            FunctionDeclaration : self.visit_function_declaration,
             Type : self.visit_type_dec,
             CompoundStatement : self.visit_compound_statement,
-            ProcedureCall : self.visit_procedure_call,
+            CallStatement : self.visit_call,
             AssignmentStatement : self.visit_assignment_statement,
             JumpStatement : self.visit_jump_statement,
             CaseStatement : self.visit_case_statement,
@@ -62,6 +63,11 @@ class AST_Visitor(ABC):
     @abstractmethod
     def visit_procedure_declaration(self, node):
         pass
+    
+    
+    @abstractmethod
+    def visit_function_declaration(self, node):
+        pass
 
 
     @abstractmethod
@@ -75,7 +81,7 @@ class AST_Visitor(ABC):
     
     
     @abstractmethod
-    def visit_procedure_call(self, node):
+    def visit_call(self, node):
         pass
 
 
